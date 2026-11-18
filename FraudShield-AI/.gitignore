@@ -1,0 +1,30 @@
+# Node
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# Python (only used for docs/generate_figures.py)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.ipynb_checkpoints/
+
+# Secrets / local config (this project needs none)
+.env
+.env.*
+*.pem
+*.key
+
+# Re-creatable data (run: node data/generate_dataset.js). A 300-row sample is committed.
+data/synthetic_transactions.csv
+
+# Test output, logs, OS and editor files
+test-results/
+playwright-report/
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

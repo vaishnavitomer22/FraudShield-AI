@@ -1,0 +1,3882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FraudShield AI — Online Transaction Fraud Detection</title>
+  <style>
+/* ============================================
+   FRAUDSHIELD AI — GLOBAL STYLES
+   ============================================ */
+:root {
+  /* Colors */
+  --bg-primary: #030712;
+  --bg-secondary: #0a0f1e;
+  --bg-card: rgba(15, 23, 42, 0.6);
+  --bg-card-hover: rgba(20, 30, 55, 0.8);
+  --surface: rgba(30, 41, 70, 0.4);
+  --border: rgba(100, 140, 255, 0.1);
+  --border-hover: rgba(100, 140, 255, 0.3);
+
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+
+  --accent-blue: #3b82f6;
+  --accent-cyan: #06b6d4;
+  --accent-purple: #8b5cf6;
+  --accent-green: #10b981;
+  --accent-orange: #f59e0b;
+  --accent-red: #ef4444;
+  --accent-pink: #ec4899;
+
+  --gradient-primary: linear-gradient(135deg, #3b82f6, #8b5cf6, #06b6d4);
+  --gradient-hero: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #06b6d4 100%);
+  --gradient-card: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(139,92,246,0.1));
+
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+  --shadow-md: 0 8px 32px rgba(0,0,0,0.4);
+  --shadow-lg: 0 20px 60px rgba(0,0,0,0.5);
+  --shadow-glow: 0 0 40px rgba(59,130,246,0.3);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+
+  --font-display: 'Orbitron', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --nav-height: 80px;
+}
+
+/* ============================================
+   RESET & BASE
+   ============================================ */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-blue) var(--bg-primary);
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  overflow-x: hidden;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--accent-blue); border-radius: 4px; }
+
+a { text-decoration: none; color: inherit; }
+ul { list-style: none; }
+img { max-width: 100%; display: block; }
+
+.section-container {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.gradient-text {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================
+   PRELOADER
+   ============================================ */
+#preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: var(--bg-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.6s ease, visibility 0.6s ease;
+}
+
+#preloader.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.loader-content {
+  text-align: center;
+}
+
+.loader-shield {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 30px;
+}
+
+.shield-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid transparent;
+}
+
+.ring-1 {
+  border-top-color: var(--accent-blue);
+  animation: spin 1.5s linear infinite;
+}
+.ring-2 {
+  inset: 10px;
+  border-right-color: var(--accent-purple);
+  animation: spin 2s linear infinite reverse;
+}
+.ring-3 {
+  inset: 20px;
+  border-bottom-color: var(--accent-cyan);
+  animation: spin 1s linear infinite;
+}
+
+.shield-icon {
+  position: absolute;
+  inset: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: var(--accent-blue);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.loader-text {
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.dots::after {
+  content: '';
+  animation: dots 1.5s steps(4) infinite;
+}
+
+@keyframes dots {
+  0% { content: ''; }
+  25% { content: '.'; }
+  50% { content: '..'; }
+  75% { content: '...'; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.7; }
+}
+
+/* ============================================
+   PARTICLE CANVAS
+   ============================================ */
+#particles {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ============================================
+   CURSOR GLOW
+   ============================================ */
+#cursor-glow {
+  position: fixed;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 1;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.3s;
+}
+
+/* ============================================
+   NAVIGATION
+   ============================================ */
+#navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--nav-height);
+  z-index: 1000;
+  transition: all 0.4s ease;
+  border-bottom: 1px solid transparent;
+}
+
+#navbar.scrolled {
+  background: rgba(3, 7, 18, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom-color: var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.nav-container {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 1001;
+}
+
+.logo-icon {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gradient-primary);
+  border-radius: var(--radius-sm);
+  font-size: 1.2rem;
+  color: white;
+}
+
+.logo-pulse {
+  position: absolute;
+  inset: -4px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--accent-blue);
+  animation: logo-pulse-anim 2s ease-in-out infinite;
+  opacity: 0;
+}
+
+@keyframes logo-pulse-anim {
+  0%, 100% { opacity: 0; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.1); }
+}
+
+.logo-text {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.logo-text .accent {
+  color: var(--accent-blue);
+}
+
+.nav-links {
+  display: flex;
+  gap: 32px;
+}
+
+.nav-links a {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  position: relative;
+  padding: 8px 0;
+  transition: color 0.3s;
+}
+
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--gradient-primary);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+  color: var(--text-primary);
+}
+
+.nav-links a:hover::after,
+.nav-links a.active::after {
+  width: 100%;
+}
+
+.nav-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-nav {
+  padding: 10px 22px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-login {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+.btn-login:hover {
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+
+.btn-demo {
+  position: relative;
+  background: var(--gradient-primary);
+  color: white;
+  overflow: hidden;
+}
+
+.btn-demo .btn-glow {
+  position: absolute;
+  inset: -2px;
+  background: var(--gradient-primary);
+  filter: blur(12px);
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 0.3s;
+}
+
+.btn-demo:hover .btn-glow {
+  opacity: 0.6;
+}
+
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+  z-index: 1001;
+}
+
+.hamburger span {
+  width: 28px;
+  height: 2px;
+  background: var(--text-primary);
+  border-radius: 2px;
+  transition: all 0.3s;
+}
+
+/* ============================================
+   HERO SECTION
+   ============================================ */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding-top: var(--nav-height);
+  overflow: hidden;
+  z-index: 2;
+}
+
+.hero-bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+}
+
+.hero-content {
+  display: flex;
+  align-items: center;
+  gap: 60px;
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 40px 24px;
+  width: 100%;
+}
+
+.hero-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 20px;
+  background: rgba(59,130,246,0.1);
+  border: 1px solid rgba(59,130,246,0.2);
+  border-radius: 50px;
+  margin-bottom: 28px;
+  font-size: 0.85rem;
+  color: var(--accent-blue);
+  font-weight: 500;
+}
+
+.badge-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--accent-green);
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+  box-shadow: 0 0 8px var(--accent-green);
+}
+
+.hero-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 24px;
+}
+
+.hero-title .line {
+  display: block;
+}
+
+.hero-title .line:first-child {
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.hero-title .line:nth-child(2) {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  margin-bottom: 8px;
+}
+
+.hero-title .line:last-child {
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
+  color: var(--text-secondary);
+}
+
+.hero-subtitle {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  max-width: 540px;
+  margin-bottom: 36px;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 48px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 32px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary {
+  background: var(--gradient-primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow);
+}
+
+.btn-shine {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  animation: shine 3s ease-in-out infinite;
+}
+
+@keyframes shine {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: 100%; }
+}
+
+.btn-secondary {
+  background: var(--surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+}
+
+.btn-secondary:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-card-hover);
+  transform: translateY(-2px);
+}
+
+.hero-stats {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.hero-stat {
+  text-align: center;
+}
+
+.stat-num {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 700;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.stat-suffix {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.stat-label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 50px;
+  background: var(--border);
+}
+
+/* Hero Visual */
+.hero-visual {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  min-height: 500px;
+}
+
+.hero-3d-scene {
+  position: relative;
+  width: 420px;
+  height: 420px;
+  perspective: 1000px;
+}
+
+.hero-glow {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(59,130,246,0.3), rgba(139,92,246,0.2), transparent);
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  filter: blur(60px);
+  z-index: -1;
+  animation: glow-pulse 4s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
+  50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+}
+
+/* 3D Shield */
+.shield-3d {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 140px;
+  height: 140px;
+  transform-style: preserve-3d;
+  animation: shield-rotate 8s linear infinite;
+  transform: translate(-50%, -50%) rotateY(0deg);
+}
+
+@keyframes shield-rotate {
+  0% { transform: translate(-50%, -50%) rotateY(0deg) rotateX(10deg); }
+  100% { transform: translate(-50%, -50%) rotateY(360deg) rotateX(10deg); }
+}
+
+.shield-face {
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(59,130,246,0.3);
+  border-radius: var(--radius-lg);
+}
+
+.shield-face.front {
+  transform: translateZ(70px);
+  background: rgba(59,130,246,0.15);
+  backdrop-filter: blur(10px);
+  font-size: 3rem;
+  color: var(--accent-blue);
+  overflow: hidden;
+}
+
+.shield-scanner {
+  position: absolute;
+  top: -100%;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+  box-shadow: 0 0 20px var(--accent-cyan);
+  animation: scan 2s linear infinite;
+}
+
+@keyframes scan {
+  0% { top: -10%; }
+  100% { top: 110%; }
+}
+
+.shield-face.back {
+  transform: translateZ(-70px) rotateY(180deg);
+  background: rgba(139,92,246,0.15);
+  backdrop-filter: blur(10px);
+  font-size: 3rem;
+  color: var(--accent-purple);
+}
+
+.shield-face.left {
+  transform: rotateY(-90deg) translateZ(70px);
+  background: rgba(6,182,212,0.1);
+  width: 140px;
+}
+
+.shield-face.right {
+  transform: rotateY(90deg) translateZ(70px);
+  background: rgba(6,182,212,0.1);
+  width: 140px;
+}
+
+.shield-face.top {
+  transform: rotateX(90deg) translateZ(70px);
+  background: rgba(59,130,246,0.1);
+}
+
+.shield-face.bottom {
+  transform: rotateX(-90deg) translateZ(70px);
+  background: rgba(59,130,246,0.05);
+}
+
+/* Orbits */
+.orbit {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  border: 1px dashed rgba(59,130,246,0.15);
+  transform: translate(-50%, -50%);
+}
+
+.orbit-1 {
+  width: 260px;
+  height: 260px;
+  animation: orbit-spin 10s linear infinite;
+}
+
+.orbit-2 {
+  width: 330px;
+  height: 330px;
+  animation: orbit-spin 14s linear infinite reverse;
+}
+
+.orbit-3 {
+  width: 400px;
+  height: 400px;
+  animation: orbit-spin 18s linear infinite;
+}
+
+@keyframes orbit-spin {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.orbit-dot {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 32px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  color: var(--accent-blue);
+  backdrop-filter: blur(10px);
+}
+
+.orbit-2 .orbit-dot { color: var(--accent-purple); }
+.orbit-3 .orbit-dot { color: var(--accent-cyan); }
+
+/* Data Streams */
+.data-stream {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: rgba(15,23,42,0.85);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  backdrop-filter: blur(10px);
+  animation: float-stream 6s ease-in-out infinite;
+  white-space: nowrap;
+}
+
+.stream-1 { top: 10%; right: -10%; animation-delay: 0s; }
+.stream-2 { top: 45%; right: -20%; animation-delay: 2s; }
+.stream-3 { bottom: 15%; right: -5%; animation-delay: 4s; }
+
+@keyframes float-stream {
+  0%, 100% { transform: translateY(0) translateX(0); opacity: 0.8; }
+  50% { transform: translateY(-10px) translateX(-5px); opacity: 1; }
+}
+
+.status-ok { color: var(--accent-green); }
+.status-warn { color: var(--accent-orange); }
+.status-danger { color: var(--accent-red); }
+
+/* Scroll Indicator */
+.scroll-indicator {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.mouse {
+  width: 24px;
+  height: 38px;
+  border: 2px solid var(--text-muted);
+  border-radius: 12px;
+  position: relative;
+}
+
+.wheel {
+  width: 4px;
+  height: 8px;
+  background: var(--accent-blue);
+  border-radius: 2px;
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: scroll-wheel 1.5s ease-in-out infinite;
+}
+
+@keyframes scroll-wheel {
+  0% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(12px); }
+}
+
+.scroll-indicator span {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* ============================================
+   MARQUEE BANNER
+   ============================================ */
+.marquee-section {
+  position: relative;
+  z-index: 2;
+  padding: 20px 0;
+  background: rgba(59,130,246,0.05);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.marquee-track {
+  overflow: hidden;
+}
+
+.marquee-content {
+  display: flex;
+  gap: 60px;
+  animation: marquee 30s linear infinite;
+  width: max-content;
+}
+
+.marquee-content span {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.marquee-content span i {
+  color: var(--accent-blue);
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* ============================================
+   SECTION HEADERS
+   ============================================ */
+section {
+  position: relative;
+  z-index: 2;
+  padding: 120px 0;
+}
+
+.section-header {
+  text-align: center;
+  max-width: 700px;
+  margin: 0 auto 72px;
+}
+
+.section-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  background: rgba(59,130,246,0.1);
+  border: 1px solid rgba(59,130,246,0.15);
+  border-radius: 50px;
+  font-size: 0.8rem;
+  color: var(--accent-blue);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 16px;
+}
+
+.section-desc {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+/* ============================================
+   FEATURES
+   ============================================ */
+.features {
+  background: var(--bg-secondary);
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+}
+
+.feature-card {
+  perspective: 1000px;
+  height: 360px;
+  cursor: pointer;
+}
+
+.card-3d-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.feature-card:hover .card-3d-wrapper {
+  transform: rotateY(180deg);
+}
+
+.card-front, .card-back {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: var(--radius-lg);
+  padding: 36px;
+  border: 1px solid var(--border);
+  transition: border-color 0.3s;
+}
+
+.card-front {
+  background: var(--bg-card);
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+}
+
+.feature-card:hover .card-front {
+  border-color: var(--accent-blue);
+}
+
+.card-back {
+  background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(139,92,246,0.15));
+  backdrop-filter: blur(10px);
+  border-color: var(--accent-purple);
+  transform: rotateY(180deg);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.card-back h3 {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  margin-bottom: 24px;
+  color: var(--accent-blue);
+}
+
+.card-back ul {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.card-back li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.card-back li i {
+  color: var(--accent-green);
+  font-size: 0.85rem;
+}
+
+.card-icon {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.icon-bg {
+  position: absolute;
+  inset: 0;
+  background: rgba(59,130,246,0.15);
+  border-radius: var(--radius-md);
+  transform: rotate(45deg);
+}
+
+.card-icon i {
+  position: relative;
+  z-index: 1;
+  font-size: 1.5rem;
+  color: var(--accent-blue);
+}
+
+.icon-ring {
+  position: absolute;
+  inset: -8px;
+  border: 1px solid rgba(59,130,246,0.2);
+  border-radius: var(--radius-md);
+  transform: rotate(45deg);
+  animation: icon-ring-pulse 3s ease-in-out infinite;
+}
+
+@keyframes icon-ring-pulse {
+  0%, 100% { opacity: 0.3; transform: rotate(45deg) scale(1); }
+  50% { opacity: 0.8; transform: rotate(45deg) scale(1.1); }
+}
+
+.icon-cyan .icon-bg { background: rgba(6,182,212,0.15); }
+.icon-cyan i { color: var(--accent-cyan); }
+.icon-cyan .icon-ring { border-color: rgba(6,182,212,0.2); }
+
+.icon-purple .icon-bg { background: rgba(139,92,246,0.15); }
+.icon-purple i { color: var(--accent-purple); }
+.icon-purple .icon-ring { border-color: rgba(139,92,246,0.2); }
+
+.icon-green .icon-bg { background: rgba(16,185,129,0.15); }
+.icon-green i { color: var(--accent-green); }
+.icon-green .icon-ring { border-color: rgba(16,185,129,0.2); }
+
+.icon-orange .icon-bg { background: rgba(245,158,11,0.15); }
+.icon-orange i { color: var(--accent-orange); }
+.icon-orange .icon-ring { border-color: rgba(245,158,11,0.2); }
+
+.icon-red .icon-bg { background: rgba(239,68,68,0.15); }
+.icon-red i { color: var(--accent-red); }
+.icon-red .icon-ring { border-color: rgba(239,68,68,0.2); }
+
+.card-front h3 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.card-front p {
+  font-size: 0.92rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  flex: 1;
+}
+
+.card-footer {
+  margin-top: auto;
+}
+
+.learn-more {
+  font-size: 0.85rem;
+  color: var(--accent-blue);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: gap 0.3s;
+}
+
+.feature-card:hover .learn-more {
+  gap: 12px;
+}
+
+/* ============================================
+   HOW IT WORKS — TIMELINE
+   ============================================ */
+.how-it-works {
+  background: var(--bg-primary);
+}
+
+.timeline {
+  position: relative;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.timeline-line {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--border);
+}
+
+.timeline-progress {
+  width: 100%;
+  height: 0%;
+  background: var(--gradient-primary);
+  border-radius: 2px;
+  transition: height 0.1s linear;
+}
+
+.timeline-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 72px;
+  position: relative;
+}
+
+.timeline-item:nth-child(even) {
+  flex-direction: row-reverse;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--bg-primary);
+  border: 2px solid var(--accent-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--accent-blue);
+  z-index: 2;
+}
+
+.dot-ring {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 1px solid rgba(59,130,246,0.2);
+  animation: icon-ring-pulse 3s ease-in-out infinite;
+}
+
+.timeline-card {
+  width: calc(50% - 60px);
+  padding: 32px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.timeline-card:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-glow);
+}
+
+.timeline-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(59,130,246,0.15);
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+  font-size: 1.2rem;
+  color: var(--accent-blue);
+}
+
+.timeline-icon.icon-cyan { background: rgba(6,182,212,0.15); color: var(--accent-cyan); }
+.timeline-icon.icon-purple { background: rgba(139,92,246,0.15); color: var(--accent-purple); }
+.timeline-icon.icon-green { background: rgba(16,185,129,0.15); color: var(--accent-green); }
+.timeline-icon.icon-orange { background: rgba(245,158,11,0.15); color: var(--accent-orange); }
+
+.timeline-card h3 {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.timeline-card p {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.timeline-tech {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.timeline-tech span {
+  padding: 4px 12px;
+  background: rgba(59,130,246,0.1);
+  border: 1px solid rgba(59,130,246,0.15);
+  border-radius: 50px;
+  font-size: 0.75rem;
+  color: var(--accent-blue);
+  font-family: var(--font-mono);
+}
+
+/* ============================================
+   DASHBOARD PREVIEW
+   ============================================ */
+.dashboard {
+  background: var(--bg-secondary);
+}
+
+.dashboard-preview {
+  position: relative;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.dashboard-window {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+
+.window-toolbar {
+  display: flex;
+  align-items: center;
+  padding: 14px 20px;
+  background: rgba(15,23,42,0.8);
+  border-bottom: 1px solid var(--border);
+}
+
+.toolbar-dots {
+  display: flex;
+  gap: 8px;
+}
+
+.toolbar-dots .dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+.dot.red { background: #ef4444; }
+.dot.yellow { background: #f59e0b; }
+.dot.green { background: #10b981; }
+
+.toolbar-title {
+  flex: 1;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.toolbar-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--accent-green);
+  font-family: var(--font-mono);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--accent-green);
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+  box-shadow: 0 0 8px var(--accent-green);
+}
+
+.dashboard-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.dash-row {
+  display: flex;
+  gap: 16px;
+}
+
+.top-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.dash-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  transition: all 0.3s;
+}
+
+.dash-card:hover {
+  border-color: var(--border-hover);
+}
+
+.metric-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+}
+
+.metric-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+
+.metric-icon.blue { background: rgba(59,130,246,0.15); color: var(--accent-blue); }
+.metric-icon.red { background: rgba(239,68,68,0.15); color: var(--accent-red); }
+.metric-icon.green { background: rgba(16,185,129,0.15); color: var(--accent-green); }
+.metric-icon.purple { background: rgba(139,92,246,0.15); color: var(--accent-purple); }
+
+.metric-value {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.metric-value small {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.metric-label {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.metric-trend {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 50px;
+}
+
+.metric-trend.up { color: var(--accent-green); background: rgba(16,185,129,0.1); }
+.metric-trend.down { color: var(--accent-red); background: rgba(239,68,68,0.1); }
+
+.mid-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.chart-header h4 {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.chart-legend {
+  display: flex;
+  gap: 16px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.legend-dot.blue { background: var(--accent-blue); }
+.legend-dot.red { background: var(--accent-red); }
+
+.chart-area {
+  width: 100%;
+}
+
+.chart-svg {
+  width: 100%;
+  height: auto;
+}
+
+.grid-line {
+  stroke: var(--border);
+  stroke-width: 0.5;
+}
+
+.chart-fill.blue-fill {
+  fill: rgba(59,130,246,0.15);
+}
+
+.chart-line.blue-line {
+  fill: none;
+  stroke: var(--accent-blue);
+  stroke-width: 2;
+}
+
+.chart-fill.red-fill {
+  fill: rgba(239,68,68,0.1);
+}
+
+.chart-line.red-line {
+  fill: none;
+  stroke: var(--accent-red);
+  stroke-width: 2;
+}
+
+.risk-card h4 {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.heatmap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.heatmap-row {
+  display: flex;
+  gap: 4px;
+}
+
+.heat-cell {
+  flex: 1;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  font-family: var(--font-mono);
+  color: rgba(255,255,255,0.7);
+}
+
+.h1 { background: rgba(59,130,246,0.15); }
+.h2 { background: rgba(59,130,246,0.3); }
+.h3 { background: rgba(245,158,11,0.3); }
+.h4 { background: rgba(239,68,68,0.35); }
+.h5 { background: rgba(239,68,68,0.55); }
+
+.heatmap-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.heatmap-labels span {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.feed-card {
+  width: 100%;
+}
+
+.feed-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.feed-header h4 {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.feed-live {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--accent-red);
+  font-weight: 700;
+}
+
+.live-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--accent-red);
+  border-radius: 50%;
+  animation: pulse 1s ease-in-out infinite;
+  box-shadow: 0 0 6px var(--accent-red);
+}
+
+.feed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow: hidden;
+}
+
+.feed-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: rgba(15,23,42,0.5);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  animation: feed-slide-in 0.4s ease;
+}
+
+@keyframes feed-slide-in {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.feed-status {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.feed-status.safe { background: var(--accent-green); box-shadow: 0 0 6px var(--accent-green); }
+.feed-status.warning { background: var(--accent-orange); box-shadow: 0 0 6px var(--accent-orange); }
+.feed-status.danger { background: var(--accent-red); box-shadow: 0 0 6px var(--accent-red); }
+
+.feed-id { color: var(--text-muted); min-width: 80px; }
+.feed-type { color: var(--accent-cyan); min-width: 60px; }
+.feed-amount { color: var(--text-primary); min-width: 100px; font-weight: 600; }
+.feed-result { min-width: 80px; font-weight: 600; }
+.feed-result.approved { color: var(--accent-green); }
+.feed-result.flagged { color: var(--accent-orange); }
+.feed-result.blocked { color: var(--accent-red); }
+.feed-time { color: var(--text-muted); margin-left: auto; }
+
+.dashboard-glow {
+  position: absolute;
+  bottom: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 120px;
+  background: radial-gradient(ellipse, rgba(59,130,246,0.2), transparent);
+  filter: blur(40px);
+}
+
+/* ============================================
+   PLATFORMS
+   ============================================ */
+.platforms {
+  background: var(--bg-primary);
+}
+
+.platforms-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+.platform-card {
+  perspective: 800px;
+}
+
+.platform-3d {
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+  transition: all 0.4s ease;
+  transform-style: preserve-3d;
+  overflow: hidden;
+}
+
+.platform-card:hover .platform-3d {
+  border-color: var(--border-hover);
+  transform: rotateX(5deg) rotateY(-5deg) translateY(-8px);
+  box-shadow: 20px 20px 60px rgba(0,0,0,0.4), 0 0 40px rgba(59,130,246,0.1);
+}
+
+.platform-inner {
+  padding: 36px 28px;
+  text-align: center;
+}
+
+.platform-icon {
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+/* 3D Cube Icon */
+.icon-3d-cube {
+  width: 64px;
+  height: 64px;
+  position: relative;
+  transform-style: preserve-3d;
+  animation: cube-rotate 6s ease-in-out infinite;
+}
+
+@keyframes cube-rotate {
+  0%, 100% { transform: rotateX(-10deg) rotateY(0deg); }
+  25% { transform: rotateX(10deg) rotateY(90deg); }
+  50% { transform: rotateX(-5deg) rotateY(180deg); }
+  75% { transform: rotateX(5deg) rotateY(270deg); }
+}
+
+.cube-face {
+  position: absolute;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  border: 1px solid rgba(59,130,246,0.3);
+  border-radius: var(--radius-sm);
+}
+
+.cube-front {
+  transform: translateZ(32px);
+  background: rgba(59,130,246,0.15);
+  color: var(--accent-blue);
+}
+.cube-back {
+  transform: rotateY(180deg) translateZ(32px);
+  background: rgba(59,130,246,0.1);
+  color: var(--accent-blue);
+}
+.cube-left {
+  transform: rotateY(-90deg) translateZ(32px);
+  background: rgba(59,130,246,0.08);
+}
+.cube-right {
+  transform: rotateY(90deg) translateZ(32px);
+  background: rgba(59,130,246,0.08);
+}
+.cube-top {
+  transform: rotateX(90deg) translateZ(32px);
+  background: rgba(59,130,246,0.06);
+}
+.cube-bottom {
+  transform: rotateX(-90deg) translateZ(32px);
+  background: rgba(59,130,246,0.04);
+}
+
+.icon-cyan .cube-front,
+.platform-card:nth-child(2) .cube-front { background: rgba(6,182,212,0.15); color: var(--accent-cyan); border-color: rgba(6,182,212,0.3); }
+.platform-card:nth-child(2) .cube-back { background: rgba(6,182,212,0.1); color: var(--accent-cyan); border-color: rgba(6,182,212,0.3); }
+.platform-card:nth-child(2) .cube-left,
+.platform-card:nth-child(2) .cube-right,
+.platform-card:nth-child(2) .cube-top,
+.platform-card:nth-child(2) .cube-bottom { border-color: rgba(6,182,212,0.2); }
+
+.platform-card:nth-child(3) .cube-front { background: rgba(139,92,246,0.15); color: var(--accent-purple); border-color: rgba(139,92,246,0.3); }
+.platform-card:nth-child(3) .cube-back { background: rgba(139,92,246,0.1); color: var(--accent-purple); border-color: rgba(139,92,246,0.3); }
+.platform-card:nth-child(3) .cube-left,
+.platform-card:nth-child(3) .cube-right,
+.platform-card:nth-child(3) .cube-top,
+.platform-card:nth-child(3) .cube-bottom { border-color: rgba(139,92,246,0.2); }
+
+.platform-card:nth-child(4) .cube-front { background: rgba(16,185,129,0.15); color: var(--accent-green); border-color: rgba(16,185,129,0.3); }
+.platform-card:nth-child(4) .cube-back { background: rgba(16,185,129,0.1); color: var(--accent-green); border-color: rgba(16,185,129,0.3); }
+.platform-card:nth-child(4) .cube-left,
+.platform-card:nth-child(4) .cube-right,
+.platform-card:nth-child(4) .cube-top,
+.platform-card:nth-child(4) .cube-bottom { border-color: rgba(16,185,129,0.2); }
+
+.platform-inner h3 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.platform-inner p {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.platform-features {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+}
+
+.platform-features span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.platform-features i {
+  color: var(--accent-green);
+  font-size: 0.7rem;
+}
+
+/* ============================================
+   STATS SECTION
+   ============================================ */
+.stats {
+  background: var(--bg-secondary);
+  position: relative;
+  overflow: hidden;
+}
+
+.stats-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.stats-grid-bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(59,130,246,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59,130,246,0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+}
+
+.stat-block {
+  perspective: 800px;
+}
+
+.stat-3d {
+  padding: 36px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(10px);
+  text-align: center;
+  transition: all 0.4s ease;
+  transform-style: preserve-3d;
+}
+
+.stat-block:hover .stat-3d {
+  transform: rotateX(5deg) translateY(-8px);
+  border-color: var(--border-hover);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3), 0 0 30px rgba(59,130,246,0.1);
+}
+
+.stat-value {
+  font-family: var(--font-display);
+  font-size: 2.8rem;
+  font-weight: 800;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+}
+
+.stat-unit {
+  font-size: 1.4rem;
+  opacity: 0.7;
+}
+
+.stat-title {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+.stat-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(59,130,246,0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.stat-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--gradient-primary);
+  border-radius: 4px;
+  transition: width 1.5s ease-out;
+}
+
+.stat-fill.animated {
+  width: var(--fill-width);
+}
+
+/* ============================================
+   TESTIMONIALS
+   ============================================ */
+.testimonials {
+  background: var(--bg-primary);
+}
+
+.testimonials-slider {
+  max-width: 700px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.testimonial-card {
+  display: none;
+  text-align: center;
+  animation: fade-in 0.5s ease;
+}
+
+.testimonial-card.active {
+  display: block;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.testimonial-stars {
+  margin-bottom: 20px;
+}
+
+.testimonial-stars i {
+  color: var(--accent-orange);
+  font-size: 1.1rem;
+  margin: 0 2px;
+}
+
+.testimonial-text {
+  font-size: 1.15rem;
+  line-height: 1.8;
+  color: var(--text-secondary);
+  margin-bottom: 28px;
+  font-style: italic;
+}
+
+.testimonial-author {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.author-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--gradient-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.author-info {
+  text-align: left;
+}
+
+.author-name {
+  display: block;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.author-role {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.testimonial-dots {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 36px;
+}
+
+.t-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--border);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.t-dot.active {
+  background: var(--accent-blue);
+  box-shadow: 0 0 10px rgba(59,130,246,0.5);
+}
+
+/* ============================================
+   CTA SECTION
+   ============================================ */
+.cta {
+  background: var(--bg-secondary);
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.cta-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+}
+
+.orb-1 {
+  width: 400px; height: 400px;
+  background: rgba(59,130,246,0.15);
+  top: -100px; left: -100px;
+  animation: orb-float 8s ease-in-out infinite;
+}
+.orb-2 {
+  width: 300px; height: 300px;
+  background: rgba(139,92,246,0.15);
+  bottom: -80px; right: -80px;
+  animation: orb-float 10s ease-in-out infinite reverse;
+}
+.orb-3 {
+  width: 200px; height: 200px;
+  background: rgba(6,182,212,0.1);
+  top: 50%; left: 50%;
+  animation: orb-float 12s ease-in-out infinite;
+}
+
+@keyframes orb-float {
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(30px, -30px); }
+  66% { transform: translate(-20px, 20px); }
+}
+
+.cta-content {
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
+
+.cta-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  margin-bottom: 20px;
+  line-height: 1.2;
+}
+
+.cta-desc {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  max-width: 600px;
+  margin: 0 auto 36px;
+  line-height: 1.7;
+}
+
+.cta-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+
+.btn-large {
+  padding: 18px 40px;
+  font-size: 1.05rem;
+}
+
+.cta-trust {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.cta-trust span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.cta-trust i {
+  color: var(--accent-green);
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+.footer {
+  position: relative;
+  z-index: 2;
+  background: var(--bg-primary);
+  border-top: 1px solid var(--border);
+}
+
+.footer-top {
+  padding: 72px 0 48px;
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.5fr repeat(4, 1fr);
+  gap: 48px;
+}
+
+.footer-brand p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin: 16px 0 24px;
+  max-width: 300px;
+}
+
+.footer-socials {
+  display: flex;
+  gap: 12px;
+}
+
+.footer-socials a {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: all 0.3s;
+}
+
+.footer-socials a:hover {
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+  background: rgba(59,130,246,0.1);
+}
+
+.footer-links h4 {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.footer-links a {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  padding: 6px 0;
+  transition: color 0.3s;
+}
+
+.footer-links a:hover {
+  color: var(--accent-blue);
+}
+
+.footer-bottom {
+  padding: 20px 0;
+  border-top: 1px solid var(--border);
+}
+
+.footer-bottom p {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.footer-bottom i {
+  color: var(--accent-red);
+}
+
+/* ============================================
+   SCROLL REVEAL ANIMATIONS
+   ============================================ */
+.reveal-up {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-60px);
+  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-right {
+  opacity: 0;
+  transform: translateX(60px);
+  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-up.revealed,
+.reveal-left.revealed,
+.reveal-right.revealed {
+  opacity: 1;
+  transform: translate(0);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 1024px) {
+  .features-grid { grid-template-columns: repeat(2, 1fr); }
+  .platforms-grid { grid-template-columns: repeat(2, 1fr); }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .footer-grid { grid-template-columns: repeat(3, 1fr); }
+  .top-row { grid-template-columns: repeat(2, 1fr); }
+  .mid-row { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .nav-links, .nav-actions { display: none; }
+  .hamburger { display: flex; }
+
+  .hero-content {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .hero-subtitle { margin-left: auto; margin-right: auto; }
+  .hero-buttons { justify-content: center; }
+  .hero-stats { justify-content: center; flex-wrap: wrap; }
+
+  .hero-visual {
+    min-height: 350px;
+    width: 100%;
+  }
+
+  .hero-3d-scene { width: 300px; height: 300px; }
+
+  .features-grid { grid-template-columns: 1fr; }
+  .feature-card { height: auto; min-height: 300px; }
+  
+  .timeline-line { left: 24px; }
+  .timeline-item { flex-direction: column !important; align-items: flex-start; padding-left: 64px; }
+  .timeline-dot { left: 24px !important; }
+  .timeline-card { width: 100%; }
+
+  .platforms-grid { grid-template-columns: 1fr; }
+  .stats-row { grid-template-columns: 1fr; }
+  .top-row { grid-template-columns: 1fr; }
+
+  .footer-grid { grid-template-columns: 1fr 1fr; }
+
+  .data-stream { display: none; }
+}
+
+@media (max-width: 480px) {
+  .hero-title .line:nth-child(2) { font-size: 2rem; }
+  .cta-title { font-size: 1.6rem; }
+  .footer-grid { grid-template-columns: 1fr; }
+}
+.demo{padding:100px 0;position:relative}
+.demo-card{max-width:820px;margin:0 auto;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px;backdrop-filter:blur(12px)}
+.demo-input-row{display:flex;gap:12px;flex-wrap:wrap}
+.demo-input-row input{flex:1;min-width:200px;padding:16px 20px;font:500 18px 'JetBrains Mono',monospace;color:var(--text-primary);background:rgba(3,7,18,.7);border:1px solid var(--border-hover);border-radius:var(--radius-md);outline:none}
+.demo-input-row input:focus{border-color:var(--accent-blue);box-shadow:0 0 0 3px rgba(59,130,246,.25)}
+.demo-btn{padding:16px 28px;cursor:pointer}
+.demo-reset,.demo-preset{background:var(--surface);color:var(--text-secondary);border:1px solid var(--border);border-radius:999px;padding:10px 18px;cursor:pointer;font:500 13px Inter,sans-serif}
+.demo-reset:hover,.demo-preset:hover{border-color:var(--accent-blue);color:var(--text-primary)}
+.demo-sub{margin:22px 0 10px;color:var(--text-muted);font-size:13px;text-transform:uppercase;letter-spacing:1px}
+.demo-flags{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+.demo-flags label{display:flex;gap:10px;align-items:center;color:var(--text-secondary);font-size:14px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer}
+.demo-flags input{accent-color:var(--accent-blue);width:16px;height:16px}
+.demo-presets{display:flex;gap:8px;flex-wrap:wrap}
+.demo-error{margin-top:20px;color:var(--accent-red);font-weight:500}
+.demo-result{margin-top:28px;padding:24px;border-radius:var(--radius-md);border:1px solid var(--c);background:rgba(3,7,18,.6);--c:var(--accent-green)}
+.lvl-medium{--c:var(--accent-orange)}.lvl-high{--c:#f97316}.lvl-critical{--c:var(--accent-red)}
+.demo-top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.demo-num{font:600 20px 'JetBrains Mono',monospace;color:var(--text-primary)}
+.demo-level{margin-top:6px;font:700 16px Orbitron,sans-serif;color:var(--c);letter-spacing:1px}
+.demo-scorebox span{font:800 52px Orbitron,sans-serif;color:var(--c)}.demo-scorebox small{color:var(--text-muted);font-size:16px}
+.demo-meter{height:10px;background:rgba(255,255,255,.08);border-radius:99px;margin:16px 0;overflow:hidden}
+.demo-meter div{height:100%;width:0;background:var(--c);border-radius:99px;transition:width .8s ease}
+.demo-advice{color:var(--text-primary);font-weight:500;margin-bottom:14px}
+.demo-signals{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.demo-signals li{padding:10px 14px 10px 38px;position:relative;background:var(--surface);border-radius:var(--radius-sm);color:var(--text-secondary);font-size:14px}
+.demo-signals li::before{position:absolute;left:12px;top:9px}
+.s-ok::before{content:"✅"}.s-info::before{content:"ℹ️"}.s-warn::before{content:"⚠️"}.s-bad::before{content:"🚨"}
+.demo-help{margin-top:16px;font-size:13px;color:var(--text-muted)}
+.demo-note{margin-top:20px;font-size:12px;color:var(--text-muted)}
+@media(max-width:600px){.demo-card{padding:20px}.demo-btn,.demo-reset{flex:1}}
+
+
+/* ===== v2 PROFESSIONAL POLISH ===== */
+[hidden]{display:none!important}
+html,body{overflow-x:clip;max-width:100%}.hero{overflow:hidden}
+.nav-links{gap:clamp(14px,1.7vw,34px)}.nav-links a,.logo-text,.btn-nav{white-space:nowrap}.btn-nav{padding-left:20px;padding-right:20px}
+html{scroll-padding-top:76px}
+body{font-size:16px;line-height:1.65;text-rendering:optimizeLegibility}
+section[id]{padding-top:clamp(72px,9vw,120px);padding-bottom:clamp(56px,8vw,100px)}
+.section-header{margin-bottom:clamp(32px,5vw,60px)}
+.section-title{font-size:clamp(1.8rem,4.2vw,2.9rem);line-height:1.18;letter-spacing:-.01em}
+.section-desc{max-width:680px;margin:16px auto 0;font-size:clamp(.98rem,1.3vw,1.1rem);color:var(--text-secondary);line-height:1.7}
+.hero-title{letter-spacing:-.015em}
+.hero-subtitle{font-size:clamp(1rem,1.5vw,1.15rem);line-height:1.75;max-width:560px}
+.btn,.btn-nav,.demo-btn{transition:transform .2s ease,box-shadow .25s ease,border-color .25s ease,background .25s ease;cursor:pointer}
+.btn{min-height:50px;font-weight:600;letter-spacing:.01em}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(59,130,246,.4)}
+.btn-secondary:hover,.btn-nav:hover{transform:translateY(-2px);border-color:var(--accent-blue)}
+.btn:active,.btn-nav:active{transform:translateY(0) scale(.98)}
+:focus-visible{outline:2px solid var(--accent-cyan);outline-offset:3px;border-radius:6px}
+.nav-links a{font-weight:500;font-size:.92rem}
+.nav-cta-li{display:none}
+.feature-card,.platform-card,.timeline-card,.testimonial-card,.dash-card,.demo-card{transition:transform .3s ease,border-color .3s ease,box-shadow .3s ease}
+.feature-card:hover,.platform-card:hover{transform:translateY(-6px);border-color:var(--border-hover);box-shadow:0 18px 44px rgba(0,0,0,.45),0 0 0 1px rgba(59,130,246,.15)}
+.dash-card:hover{border-color:var(--border-hover)}
+/* uniform, on-brand icon tint for emoji icons */
+i[class*="fa-"]{filter:grayscale(1) sepia(1) hue-rotate(185deg) saturate(2.6) brightness(1.15)}
+.logo-icon i,.shield-face i,.btn i,.footer-socials i,.metric-icon,.res-empty-ic,.donut-c{filter:none}
+.section-tag i{filter:none}
+/* analyzer */
+.analyzer{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:24px;max-width:1120px;margin:0 auto;align-items:start}
+.analyzer .demo-card{max-width:none;margin:0;padding:clamp(20px,3vw,32px);height:100%}
+.an-presets{margin-bottom:22px}.an-presets>span,.tx-hint{display:block;font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.tx-hint{text-transform:none;letter-spacing:0;margin:10px 0 0;min-height:1em}
+.tx-group{margin-bottom:22px}.tx-group h4{display:flex;align-items:center;gap:10px;font:600 .95rem Inter,sans-serif;color:var(--text-primary);margin-bottom:12px}
+.tx-group h4 b{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--gradient-primary);font-size:.75rem;color:#fff}
+.tx-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px}
+.tx-field label{display:block;font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+.tx-field input,.tx-field select{width:100%;padding:12px 14px;font:500 15px 'JetBrains Mono',monospace;color:var(--text-primary);background:rgba(3,7,18,.7);border:1px solid var(--border-hover);border-radius:var(--radius-md);outline:none;transition:border-color .2s,box-shadow .2s}
+.tx-field input:focus,.tx-field select:focus{border-color:var(--accent-blue);box-shadow:0 0 0 3px rgba(59,130,246,.25)}
+.tx-field input[readonly]{opacity:.5;cursor:not-allowed}
+.tx-field select option{background:#0a0f1e;color:#f1f5f9}
+.an-actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.an-result.flash,.an-form.flash{animation:flash 1.4s ease}
+@keyframes flash{0%,100%{box-shadow:0 0 0 0 rgba(59,130,246,0)}30%{box-shadow:0 0 0 4px rgba(59,130,246,.45),0 0 40px rgba(59,130,246,.25)}}
+.res-empty{text-align:center;padding:clamp(30px,6vw,70px) 10px;color:var(--text-secondary)}
+.res-empty-ic{font-size:3rem;margin-bottom:12px;opacity:.8}.res-empty h4{font:600 1.15rem Inter,sans-serif;color:var(--text-primary);margin-bottom:6px}
+.res-head{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+.gauge{position:relative;width:150px;height:150px;flex:none}.gauge svg{width:100%;height:100%}
+.g-bg{fill:none;stroke:rgba(255,255,255,.08);stroke-width:12}.g-arc{fill:none;stroke:var(--c);stroke-width:12;stroke-linecap:round;stroke-dasharray:377;stroke-dashoffset:377;transition:stroke-dashoffset 1s cubic-bezier(.2,.8,.2,1)}
+.g-num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+.g-num b{font:800 2.1rem Orbitron,sans-serif;color:var(--c)}.g-num small{position:absolute;top:calc(50% - 22px);margin-left:64px;color:var(--text-muted)}.g-num span{margin-top:6px;font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px}
+.res-verdict{flex:1;min-width:200px}.verdict{font:800 clamp(1.5rem,3vw,2rem) Orbitron,sans-serif;color:var(--c);letter-spacing:1.5px;margin:8px 0 6px}
+.chip{display:inline-block;padding:4px 12px;border-radius:999px;font:700 .7rem Inter,sans-serif;letter-spacing:1px;color:var(--c);background:rgba(255,255,255,.06);border:1px solid var(--c)}
+.res-verdict p{color:var(--text-secondary);font-size:.92rem;line-height:1.55}
+.an-result{--c:var(--accent-green)}.an-result.lvl-low{--c:var(--accent-green)}.an-result.lvl-medium{--c:var(--accent-orange)}.an-result.lvl-high{--c:var(--accent-red)}.an-result.lvl-critical{--c:var(--accent-pink)}
+.res-meta{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0}.res-meta span{padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--border);font:500 12px 'JetBrains Mono',monospace;color:var(--text-secondary)}
+.res-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}.res-cols h5{font:600 .75rem Inter,sans-serif;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:10px}
+.demo-signals li.s-bad::before{content:'⚠️'}.demo-signals li.s-ok::before{content:'✅'}.demo-signals li.s-bad{border-left:3px solid var(--accent-red)}.demo-signals li.s-ok{border-left:3px solid var(--accent-green)}.demo-signals li.s-none{color:var(--text-muted);padding-left:14px}.demo-signals li.s-none::before{content:''}
+.res-foot{margin:16px 0 8px;font:500 12px 'JetBrains Mono',monospace;color:var(--text-muted)}
+.btn-link{background:none;border:0;color:var(--accent-cyan);font:600 .9rem Inter,sans-serif;cursor:pointer;padding:6px 0}.btn-link:hover{text-decoration:underline}
+.demo-note{max-width:1120px;margin:20px auto 0;text-align:center}
+/* dashboard */
+.mid-row.eq{grid-template-columns:1fr 1fr}
+.dash-card h4{font:600 1rem Inter,sans-serif;margin-bottom:14px}.muted{color:var(--text-muted);font-weight:400}
+.metric-value{font-variant-numeric:tabular-nums}
+.metric-trend{font-size:.7rem;white-space:normal;text-align:right}
+.bars-area{position:relative;display:flex;gap:8px;height:210px}.bars-area .chart-svg{flex:1;height:100%;min-width:0}.axis-y{display:flex;flex-direction:column;justify-content:space-between;font-size:.65rem;color:var(--text-muted);padding:0 0 2px;width:32px}
+.grid-line.thr{stroke-dasharray:5 5;stroke:rgba(245,158,11,.5)}
+.chart-empty,.empty-note{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:0 20px;font-size:.85rem;color:var(--text-muted)}
+.chart-cap{margin-top:10px;font-size:.75rem;color:var(--text-muted);line-height:1.5}
+.donut-wrap{position:relative;width:170px;height:170px;margin:6px auto 14px}.donut{width:100%;height:100%}
+.d-bg{fill:none;stroke:rgba(255,255,255,.08);stroke-width:18}.d-l,.d-f{fill:none;stroke-width:18;transition:stroke-dasharray .8s ease,stroke-dashoffset .8s ease}.d-l{stroke:var(--accent-green)}.d-f{stroke:var(--accent-red)}
+.donut-c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}.donut-c b{font:800 1.6rem Orbitron,sans-serif}.donut-c span{font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px}
+.donut-leg{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;font-size:.82rem;color:var(--text-secondary)}.donut-leg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}.lg-f{background:var(--accent-red)}.lg-l{background:var(--accent-green)}.donut-leg b{color:var(--text-primary)}
+.type-row{display:grid;grid-template-columns:92px 1fr 54px;gap:10px;align-items:center;margin-bottom:12px;font-size:.8rem;color:var(--text-secondary)}.type-track{display:flex;height:12px;border-radius:99px;overflow:hidden;background:rgba(255,255,255,.06)}.type-track i{display:block;height:100%;transition:width .6s ease}.t-l{background:var(--accent-green)}.t-f{background:var(--accent-red)}.type-row b{text-align:right;color:var(--text-primary);font-variant-numeric:tabular-nums}
+.perf-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}.perf-grid div{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;text-align:center}.perf-grid b{display:block;font:700 1.15rem Orbitron,sans-serif;color:var(--accent-cyan)}.perf-grid span{font-size:.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px}
+.cm{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.cm div{padding:10px;border-radius:var(--radius-sm);font-size:.78rem;color:var(--text-secondary);border:1px solid var(--border)}.cm b{display:block;font:700 1.1rem Inter,sans-serif;color:var(--text-primary)}.cm .ok{background:rgba(16,185,129,.08)}.cm .bad{background:rgba(239,68,68,.08)}
+.feed-actions{display:flex;gap:8px;flex-wrap:wrap}.feed-list{min-height:60px;position:relative}
+.feed-item{flex-wrap:wrap;gap:6px 14px}.feed-result{min-width:110px}
+.feed-empty{padding:26px 0;text-align:center;color:var(--text-muted);font-size:.88rem}
+/* modal + toast */
+.modal{position:fixed;inset:0;z-index:20000;display:grid;place-items:center;padding:20px;background:rgba(3,7,18,.78);backdrop-filter:blur(8px)}.modal[hidden]{display:none}
+.modal-box{position:relative;max-width:520px;width:100%;background:#0a0f1e;border:1px solid var(--border-hover);border-radius:var(--radius-lg);padding:32px;box-shadow:var(--shadow-lg);animation:flash-in .25s ease}
+@keyframes flash-in{from{opacity:0;transform:translateY(12px) scale(.98)}}
+.modal-box h3{font:700 1.3rem Orbitron,sans-serif;margin-bottom:12px}.modal-box p{color:var(--text-secondary);margin-bottom:22px;line-height:1.7}.modal-x{position:absolute;top:12px;right:14px;background:none;border:0;color:var(--text-muted);font-size:1.6rem;cursor:pointer}.modal-x:hover{color:#fff}
+/* responsive */
+@media(max-width:1024px){.analyzer{grid-template-columns:1fr}.mid-row.eq{grid-template-columns:1fr}}
+@media(max-width:980px){
+  .nav-actions{display:none!important}.hamburger{display:flex!important}
+  .nav-cta-li{display:block}
+  .nav-links{display:flex!important;position:fixed;inset:var(--nav-height) 0 0 0;flex-direction:column;align-items:center;justify-content:center;gap:26px;background:rgba(3,7,18,.97);backdrop-filter:blur(20px);opacity:0;visibility:hidden;transform:translateY(-10px);transition:opacity .3s,transform .3s,visibility .3s;z-index:999}
+  .nav-links a{font-size:1.15rem}
+  body.menu-open .nav-links{opacity:1;visibility:visible;transform:none}body.menu-open{overflow:hidden}
+}
+@media(max-width:768px){
+  .res-cols{grid-template-columns:1fr}.perf-grid{grid-template-columns:repeat(2,1fr)}
+  .hero-buttons .btn{flex:1 1 100%;justify-content:center}
+}
+@media(max-width:560px){.type-row{grid-template-columns:78px 1fr 44px}.g-num small{margin-left:58px}.res-head{justify-content:center;text-align:center}.feed-actions{width:100%}.feed-actions button{flex:1}.top-row{grid-template-columns:1fr!important}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+@media(max-width:1180px) and (min-width:981px){.nav-actions .btn-login{display:none}}
+</style>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  
+</head>
+<body>
+  <!-- ====== PRELOADER ====== -->
+  <div id="preloader">
+    <div class="loader-content">
+      <div class="loader-shield">
+        <div class="shield-ring ring-1"></div>
+        <div class="shield-ring ring-2"></div>
+        <div class="shield-ring ring-3"></div>
+        <div class="shield-icon"><i class="fas fa-shield-halved" style="font-style:normal">🛡️</i></div>
+      </div>
+      <p class="loader-text">Initializing FraudShield AI<span class="dots"></span></p>
+    </div>
+  </div>
+
+  <!-- ====== PARTICLE CANVAS ====== -->
+  <canvas id="particles"></canvas>
+
+  <!-- ====== CURSOR GLOW ====== -->
+  <div id="cursor-glow"></div>
+
+  <!-- ====== NAVIGATION ====== -->
+  <nav id="navbar">
+    <div class="nav-container">
+      <a href="#" class="logo">
+        <div class="logo-icon">
+          <i class="fas fa-shield-halved" style="font-style:normal">🛡️</i>
+          <div class="logo-pulse"></div>
+        </div>
+        <span class="logo-text">Fraud<span class="accent">Shield</span> AI</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#home" class="active">Home</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#demo">Analyze</a></li>
+        <li><a href="#how-it-works">How It Works</a></li>
+        <li><a href="#dashboard">Dashboard</a></li>
+        <li><a href="#platforms">Platforms</a></li>
+        <li><a href="#stats">Performance</a></li>
+        <li><a href="#contact">Get Started</a></li>
+        <li class="nav-cta-li"><button class="btn-nav btn-demo" type="button" data-go="#demo" data-focus="1"><span>Analyze Now</span><div class="btn-glow"></div></button></li>
+      </ul>
+      <div class="nav-actions">
+        <button class="btn-nav btn-login" type="button" data-go="#dashboard">Dashboard</button>
+        <button class="btn-nav btn-demo" type="button" data-go="#demo" data-focus="1">
+          <span>Analyze Now</span>
+          <div class="btn-glow"></div>
+        </button>
+      </div>
+      <div class="hamburger" id="hamburger">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ====== HERO SECTION ====== -->
+  <section id="home" class="hero">
+    <div class="hero-bg-grid"></div>
+    <div class="hero-content">
+      <div class="hero-text">
+        <div class="hero-badge reveal-up">
+          <div class="badge-dot"></div>
+          <span>AI-Powered Security — Active & Monitoring</span>
+        </div>
+        <h1 class="hero-title reveal-up">
+          <span class="line">Next-Gen</span>
+          <span class="line gradient-text">AI Fraud Detection</span>
+          <span class="line">System</span>
+        </h1>
+        <p class="hero-subtitle reveal-up">
+          Harness the power of advanced machine learning and real-time analytics to detect 
+          suspicious transactions across banking, UPI, credit cards, and online shopping — 
+          before fraud happens.
+        </p>
+        <div class="hero-buttons reveal-up">
+          <button class="btn btn-primary" type="button" data-go="#demo" data-focus="1">
+            <span>Get Started Free</span>
+            <i class="fas fa-arrow-right" style="font-style:normal">→</i>
+            <div class="btn-shine"></div>
+          </button>
+          <button class="btn btn-secondary" type="button" data-go="#demo" data-sample="Account drained to new account">
+            <i class="fas fa-play-circle" style="font-style:normal">▶</i>
+            <span>Watch Demo</span>
+          </button>
+        </div>
+        <div class="hero-stats reveal-up">
+          <div class="hero-stat">
+            <span class="stat-num" data-count="99.7">0</span><span class="stat-suffix">%</span>
+            <span class="stat-label">Detection Rate</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="hero-stat">
+            <span class="stat-num" data-count="50">0</span><span class="stat-suffix">ms</span>
+            <span class="stat-label">Response Time</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="hero-stat">
+            <span class="stat-num" data-count="2.5">0</span><span class="stat-suffix">B+</span>
+            <span class="stat-label">Transactions Scanned</span>
+          </div>
+        </div>
+      </div>
+      <div class="hero-visual reveal-right">
+        <div class="hero-3d-scene">
+          <!-- 3D Rotating Shield -->
+          <div class="shield-3d">
+            <div class="shield-face front">
+              <i class="fas fa-shield-halved" style="font-style:normal">🛡️</i>
+              <div class="shield-scanner"></div>
+            </div>
+            <div class="shield-face back">
+              <i class="fas fa-lock" style="font-style:normal">🔒</i>
+            </div>
+            <div class="shield-face left"></div>
+            <div class="shield-face right"></div>
+            <div class="shield-face top"></div>
+            <div class="shield-face bottom"></div>
+          </div>
+          <!-- Orbiting Elements -->
+          <div class="orbit orbit-1">
+            <div class="orbit-dot"><i class="fas fa-credit-card" style="font-style:normal">💳</i></div>
+          </div>
+          <div class="orbit orbit-2">
+            <div class="orbit-dot"><i class="fas fa-building-columns" style="font-style:normal">🏦</i></div>
+          </div>
+          <div class="orbit orbit-3">
+            <div class="orbit-dot"><i class="fas fa-mobile-screen-button" style="font-style:normal">📱</i></div>
+          </div>
+          <!-- Floating data streams -->
+          <div class="data-stream stream-1">
+            <span>0x7F3A...</span>
+            <span>VERIFIED</span>
+            <span class="status-ok"><i class="fas fa-check" style="font-style:normal">✓</i></span>
+          </div>
+          <div class="data-stream stream-2">
+            <span>TXN#4829</span>
+            <span>FLAGGED</span>
+            <span class="status-warn"><i class="fas fa-exclamation-triangle" style="font-style:normal">⚠️</i></span>
+          </div>
+          <div class="data-stream stream-3">
+            <span>UPI:9821</span>
+            <span>BLOCKED</span>
+            <span class="status-danger"><i class="fas fa-ban" style="font-style:normal">🚫</i></span>
+          </div>
+        </div>
+        <div class="hero-glow"></div>
+      </div>
+    </div>
+    <div class="scroll-indicator">
+      <div class="mouse">
+        <div class="wheel"></div>
+      </div>
+      <span>Scroll to explore</span>
+    </div>
+  </section>
+
+  <!-- ====== MARQUEE BANNER ====== -->
+  <div class="marquee-section">
+    <div class="marquee-track">
+      <div class="marquee-content">
+        <span><i class="fas fa-shield-halved" style="font-style:normal">🛡️</i> Real-Time Detection</span>
+        <span><i class="fas fa-brain" style="font-style:normal">🧠</i> Machine Learning</span>
+        <span><i class="fas fa-fingerprint" style="font-style:normal">🧬</i> Biometric Auth</span>
+        <span><i class="fas fa-chart-line" style="font-style:normal">📈</i> Predictive Analytics</span>
+        <span><i class="fas fa-network-wired" style="font-style:normal">🔗</i> Neural Networks</span>
+        <span><i class="fas fa-eye" style="font-style:normal">👁️</i> Anomaly Detection</span>
+        <span><i class="fas fa-lock" style="font-style:normal">🔒</i> End-to-End Encryption</span>
+        <span><i class="fas fa-robot" style="font-style:normal">🤖</i> AI Agents</span>
+        <span><i class="fas fa-shield-halved" style="font-style:normal">🛡️</i> Real-Time Detection</span>
+        <span><i class="fas fa-brain" style="font-style:normal">🧠</i> Machine Learning</span>
+        <span><i class="fas fa-fingerprint" style="font-style:normal">🧬</i> Biometric Auth</span>
+        <span><i class="fas fa-chart-line" style="font-style:normal">📈</i> Predictive Analytics</span>
+        <span><i class="fas fa-network-wired" style="font-style:normal">🔗</i> Neural Networks</span>
+        <span><i class="fas fa-eye" style="font-style:normal">👁️</i> Anomaly Detection</span>
+        <span><i class="fas fa-lock" style="font-style:normal">🔒</i> End-to-End Encryption</span>
+        <span><i class="fas fa-robot" style="font-style:normal">🤖</i> AI Agents</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== FEATURES SECTION ====== -->
+  <section id="features" class="features">
+    <div class="section-container">
+      <div class="section-header reveal-up">
+        <span class="section-tag"><i class="fas fa-sparkles" style="font-style:normal">✨</i> Core Capabilities</span>
+        <h2 class="section-title">Powerful AI Features That<br/><span class="gradient-text">Protect Every Transaction</span></h2>
+        <p class="section-desc">Our multi-layered AI defense system processes millions of signals in real-time to keep your finances safe.</p>
+      </div>
+      <div class="features-grid">
+        <!-- Feature Card 1 -->
+        <div class="feature-card reveal-up" data-delay="0">
+          <div class="card-3d-wrapper">
+            <div class="card-front">
+              <div class="card-icon">
+                <div class="icon-bg"></div>
+                <i class="fas fa-brain" style="font-style:normal">🧠</i>
+                <div class="icon-ring"></div>
+              </div>
+              <h3>Deep Learning Engine</h3>
+              <p>Neural networks trained on billions of transactions identify complex fraud patterns invisible to rule-based systems.</p>
+              <div class="card-footer">
+                <span class="learn-more">Explore <i class="fas fa-arrow-right" style="font-style:normal">→</i></span>
+              </div>
+            </div>
+            <div class="card-back">
+              <h3><i class="fas fa-brain" style="font-style:normal">🧠</i> Deep Learning Engine</h3>
+              <ul>
+                <li><i class="fas fa-check-circle" style="font-style:normal">✔</i> Multi-layer neural network architecture</li>
+                <li><i class="fas fa-check-circle" style="font-style:normal">✔</i> Self-learning pattern recognition</li>
+                <li><i class="fas fa-check-circle" style="font-style:normal">✔</i> 99.7% accuracy rate</li>
+                <li><i class="fas fa-check-circle" style="font-style:normal">✔</i> Continuous model retraining</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <!-- Feature Card 2 -->
+        <div class="feature-card reveal-up" data-delay="100">
+          <div class="card-3d-wrapper">
+            <div class="card-front">
+              <div class="card-icon icon-cyan">
+                <div class="icon-bg"></div>
+                <i class="fas fa-bolt" style="font-style:normal">⚡</i>
+                <div class="icon-ring"></div>
+              </div>
+              <h3>Real-Time Analysis</h3>
+              <p>Evaluate every transaction in under 50ms using stream processing and edge computing for instant fraud decisions.</p>
+              <div class="card-footer">
+                <span class="learn-more">Explore <i class="fas fa-arrow-right" style="font-style:normal">→</i></span>
+              </div>
+            </div>
+            <div class="card-back">
+              <h3><i class="fas fa-bolt" style="font-style:normal">⚡</i> Real-Time Analysis</h3>
+              <ul>
+                <li><i class="fas fa-check-circle" style="font-style:normal">✔</i> Sub-50ms response time</li>
+                <li><i class="fas fa-check-circle" style="font-style:normal">✔</i> Stream processing pipeline</li>
+                <li><i class="fas fa-check-circle" style="font-style:normal">✔</i> Edge-deployed models</li>
+                <li><i class="fas fa-check-circle" style="font-style:normal">✔</i> Auto-scaling infrastructure</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <!-- Feature Card 3 -->
+        <div class="feature-card reveal-up" data-delay="200">
+          <div class="card-3d-wrapper">
+            <div class="card-front">
+              <div class="card-icon icon-purple">
+                <div class="icon-bg"></div>
+                <i class="fas fa-chart-network" style="font-style:normal">🕸️</i>
+                <div class="icon-ring"></div>
+              </div>
+              <h3>Behavioral Biometrics</h3>
+              <p>Analyze typing speed, swipe patterns, and device usage to build unique user profiles and detect impostors.</p>
+              <div class="card-footer">
+                <span class="learn-more">Explore <i class="fas fa-arrow-right" style="font-style:normal">→</i></span>
+              </div>
+            </div>
+            <div class="card-back">
+              <h3><i class="fas fa-chart-network" style="font-style:normal">🕸️</i> Behavioral Biometrics</h3>
+              <ul>
+                <li><i class="fas fa-check-circle" style="font-style:normal">✔</i> Keystroke dynamics analysis</li>
+                <li><i class="fas fa-check-circle" style="font-style:normal">✔</i> Device fingerprinting</li>
+                <li><i class="fas fa-check-circle" style="font-style:normal">✔</i> Session behavior modeling</li>
+                <li><i class="fas fa-check-circle" style="font-style:normal">✔</i> Geo-velocity checks</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <!-- Feature Card 4 -->
+        <div class="feature-card reveal-up" data-delay="0">
+          <div class="card-3d-wrapper">
+            <div class="card-front">
+              <div class="card-icon icon-green">
+                <div class="icon-bg"></div>
+                <i class="fas fa-network-wired" style="font-style:normal">🔗</i>
+                <div class="icon-ring"></div>
+              </div>
+              <h3>Graph Analytics</h3>
+              <p>Map transaction networks to reveal hidden connections between fraudsters, mule accounts, and suspicious entities.</p>
+              <div class="card-footer">
+                <span class="learn-more">Explore <i class="fas fa-arrow-right" style="font-style:normal">→</i></span>
+              </div>
+            </div>
+            <div class="card-back">
+              <h3><i class="fas fa-network-wired" style="font-style:normal">🔗</i> Graph Analytics</h3>
+              <ul>
+                <li><i class="fas fa-check-circle" style="font-style:normal">✔</i> Link analysis algorithms</li>
+                <li><i class="fas fa-check-circle" style="font-style:normal">✔</i> Community detection</li>
+                <li><i class="fas fa-check-circle" style="font-style:normal">✔</i> Money flow tracing</li>
+                <li><i class="fas fa-check-circle" style="font-style:normal">✔</i> Ring fraud identification</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <!-- Feature Card 5 -->
+        <div class="feature-card reveal-up" data-delay="100">
+          <div class="card-3d-wrapper">
+            <div class="card-front">
+              <div class="card-icon icon-orange">
+                <div class="icon-bg"></div>
+                <i class="fas fa-robot" style="font-style:normal">🤖</i>
+                <div class="icon-ring"></div>
+              </div>
+              <h3>Autonomous AI Agents</h3>
+              <p>Self-operating AI agents that investigate alerts, gather evidence, and auto-resolve cases without human intervention.</p>
+              <div class="card-footer">
+                <span class="learn-more">Explore <i class="fas fa-arrow-right" style="font-style:normal">→</i></span>
+              </div>
+            </div>
+            <div class="card-back">
+              <h3><i class="fas fa-robot" style="font-style:normal">🤖</i> Autonomous AI Agents</h3>
+              <ul>
+                <li><i class="fas fa-check-circle" style="font-style:normal">✔</i> Auto-investigation workflows</li>
+                <li><i class="fas fa-check-circle" style="font-style:normal">✔</i> Evidence collection engine</li>
+                <li><i class="fas fa-check-circle" style="font-style:normal">✔</i> Smart escalation routing</li>
+                <li><i class="fas fa-check-circle" style="font-style:normal">✔</i> 85% auto-resolution rate</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <!-- Feature Card 6 -->
+        <div class="feature-card reveal-up" data-delay="200">
+          <div class="card-3d-wrapper">
+            <div class="card-front">
+              <div class="card-icon icon-red">
+                <div class="icon-bg"></div>
+                <i class="fas fa-bell" style="font-style:normal">🔔</i>
+                <div class="icon-ring"></div>
+              </div>
+              <h3>Smart Alerts System</h3>
+              <p>Multi-channel intelligent alerts with contextual risk scoring, customizable thresholds, and escalation workflows.</p>
+              <div class="card-footer">
+                <span class="learn-more">Explore <i class="fas fa-arrow-right" style="font-style:normal">→</i></span>
+              </div>
+            </div>
+            <div class="card-back">
+              <h3><i class="fas fa-bell" style="font-style:normal">🔔</i> Smart Alerts System</h3>
+              <ul>
+                <li><i class="fas fa-check-circle" style="font-style:normal">✔</i> Multi-channel notifications</li>
+                <li><i class="fas fa-check-circle" style="font-style:normal">✔</i> Risk-based prioritization</li>
+                <li><i class="fas fa-check-circle" style="font-style:normal">✔</i> Custom alert rules</li>
+                <li><i class="fas fa-check-circle" style="font-style:normal">✔</i> SLA-driven escalation</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== HOW IT WORKS ====== -->
+  <section id="how-it-works" class="how-it-works">
+    <div class="section-container">
+      <div class="section-header reveal-up">
+        <span class="section-tag"><i class="fas fa-cogs" style="font-style:normal">⚙️</i> Process Flow</span>
+        <h2 class="section-title">How FraudShield AI<br/><span class="gradient-text">Protects Your Finances</span></h2>
+        <p class="section-desc">A sophisticated multi-stage pipeline that processes every transaction in milliseconds.</p>
+      </div>
+      <div class="timeline">
+        <div class="timeline-line">
+          <div class="timeline-progress"></div>
+        </div>
+        <!-- Step 1 -->
+        <div class="timeline-item reveal-left" data-step="01">
+          <div class="timeline-dot">
+            <div class="dot-ring"></div>
+            <span>01</span>
+          </div>
+          <div class="timeline-card">
+            <div class="timeline-icon"><i class="fas fa-database" style="font-style:normal">🗄️</i></div>
+            <h3>Data Ingestion</h3>
+            <p>Capture transaction data from all channels — bank transfers, UPI, credit cards, and e-commerce — in real-time via secure APIs and event streams.</p>
+            <div class="timeline-tech">
+              <span>Kafka</span><span>gRPC</span><span>REST API</span>
+            </div>
+          </div>
+        </div>
+        <!-- Step 2 -->
+        <div class="timeline-item reveal-right" data-step="02">
+          <div class="timeline-dot">
+            <div class="dot-ring"></div>
+            <span>02</span>
+          </div>
+          <div class="timeline-card">
+            <div class="timeline-icon icon-cyan"><i class="fas fa-microchip" style="font-style:normal">💾</i></div>
+            <h3>Feature Engineering</h3>
+            <p>Extract 500+ risk signals including velocity checks, geo-anomalies, device fingerprints, and behavioral patterns from each transaction.</p>
+            <div class="timeline-tech">
+              <span>Spark</span><span>Flink</span><span>Feature Store</span>
+            </div>
+          </div>
+        </div>
+        <!-- Step 3 -->
+        <div class="timeline-item reveal-left" data-step="03">
+          <div class="timeline-dot">
+            <div class="dot-ring"></div>
+            <span>03</span>
+          </div>
+          <div class="timeline-card">
+            <div class="timeline-icon icon-purple"><i class="fas fa-brain" style="font-style:normal">🧠</i></div>
+            <h3>AI Model Scoring</h3>
+            <p>Run ensemble ML models — gradient boosted trees, deep neural nets, and graph neural networks — to compute a fraud probability score.</p>
+            <div class="timeline-tech">
+              <span>TensorFlow</span><span>PyTorch</span><span>XGBoost</span>
+            </div>
+          </div>
+        </div>
+        <!-- Step 4 -->
+        <div class="timeline-item reveal-right" data-step="04">
+          <div class="timeline-dot">
+            <div class="dot-ring"></div>
+            <span>04</span>
+          </div>
+          <div class="timeline-card">
+            <div class="timeline-icon icon-green"><i class="fas fa-gavel" style="font-style:normal">⚖️</i></div>
+            <h3>Decision Engine</h3>
+            <p>Apply business rules and regulatory policies to the AI score. Approve, challenge, or block the transaction — all in under 50 milliseconds.</p>
+            <div class="timeline-tech">
+              <span>Rules Engine</span><span>Policy API</span><span>Drools</span>
+            </div>
+          </div>
+        </div>
+        <!-- Step 5 -->
+        <div class="timeline-item reveal-left" data-step="05">
+          <div class="timeline-dot">
+            <div class="dot-ring"></div>
+            <span>05</span>
+          </div>
+          <div class="timeline-card">
+            <div class="timeline-icon icon-orange"><i class="fas fa-chart-line" style="font-style:normal">📈</i></div>
+            <h3>Monitor & Learn</h3>
+            <p>Continuously monitor outcomes, collect feedback, and retrain models. The system gets smarter with every transaction it processes.</p>
+            <div class="timeline-tech">
+              <span>MLOps</span><span>A/B Testing</span><span>AutoML</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== TRANSACTION FRAUD ANALYZER ====== -->
+  <section id="demo" class="demo">
+    <div class="section-container">
+      <div class="section-header reveal-up">
+        <span class="section-tag"><i style="font-style:normal">💳</i> Fraud Detection</span>
+        <h2 class="section-title">Analyze an <span class="gradient-text">Online Transaction</span></h2>
+        <p class="section-desc">Enter the transaction details below. A machine-learning model running in your browser returns a FRAUD or LEGITIMATE verdict with its fraud-risk score.</p>
+      </div>
+      <div class="analyzer reveal-up">
+        <div class="demo-card an-form">
+          <div class="an-presets"><span>Try an example</span><div class="demo-presets" id="presets"></div></div>
+          <div class="tx-group"><h4><b>1</b> Transaction</h4>
+            <div class="tx-grid">
+              <div class="tx-field"><label for="txType">Transaction type</label><select id="txType"><option value="PAYMENT">Payment (merchant)</option><option value="TRANSFER">Transfer (to account)</option><option value="CASH_OUT">Cash out</option><option value="CASH_IN">Cash in</option><option value="DEBIT">Debit</option></select></div>
+              <div class="tx-field"><label for="txAmount">Amount (₹)</label><input id="txAmount" type="number" min="0" step="any" inputmode="decimal" value="1200"></div>
+              <div class="tx-field"><label for="txHour">Time of day</label><select id="txHour"></select></div>
+            </div></div>
+          <div class="tx-group"><h4><b>2</b> Sender account</h4>
+            <div class="tx-grid">
+              <div class="tx-field"><label for="txOldOrg">Balance before (₹)</label><input id="txOldOrg" type="number" min="0" step="any" inputmode="decimal" value="50000"></div>
+              <div class="tx-field"><label for="txNewOrg">Balance after (₹)</label><input id="txNewOrg" type="number" min="0" step="any" inputmode="decimal" value="48800"></div>
+            </div></div>
+          <div class="tx-group"><h4><b>3</b> Receiver account</h4>
+            <div class="tx-grid">
+              <div class="tx-field"><label for="txOldDest">Balance before (₹)</label><input id="txOldDest" type="number" min="0" step="any" inputmode="decimal" value="0"></div>
+              <div class="tx-field"><label for="txNewDest">Balance after (₹)</label><input id="txNewDest" type="number" min="0" step="any" inputmode="decimal" value="0"></div>
+            </div>
+            <p class="tx-hint" id="destHint"></p></div>
+          <p id="demoError" class="demo-error" role="alert" hidden></p>
+          <div class="an-actions">
+            <button id="demoCheck" class="btn btn-primary" type="button"><span>Analyze Transaction</span><div class="btn-shine"></div></button>
+            <button id="demoReset" class="demo-reset" type="button">Reset</button>
+          </div>
+        </div>
+        <div class="demo-card an-result" id="resultPanel" aria-live="polite">
+          <div class="res-empty" id="resEmpty"><div class="res-empty-ic">🛡️</div><h4>Your verdict will appear here</h4><p>Pick an example or fill in the form, then press <b>Analyze Transaction</b>.</p></div>
+          <div class="res-out" id="resOut" hidden>
+            <div class="res-head">
+              <div class="gauge"><svg viewBox="0 0 140 140" aria-hidden="true"><circle class="g-bg" cx="70" cy="70" r="60"/><circle id="gArc" class="g-arc" cx="70" cy="70" r="60" transform="rotate(-90 70 70)"/></svg><div class="g-num"><b id="demoScore">0</b><small>%</small><span>fraud risk</span></div></div>
+              <div class="res-verdict"><span class="chip" id="levelChip"></span><div class="verdict" id="verdict"></div><p id="demoAdvice"></p></div>
+            </div>
+            <div class="res-meta" id="resMeta"></div>
+            <div class="res-cols"><div><h5>Raising risk</h5><ul class="demo-signals" id="badList"></ul></div><div><h5>Lowering risk</h5><ul class="demo-signals" id="goodList"></ul></div></div>
+            <p class="res-foot" id="resFoot"></p>
+            <button class="btn-link" type="button" data-go="#dashboard">See it on the dashboard →</button>
+          </div>
+        </div>
+      </div>
+      <p class="demo-note" id="modelNote"></p>
+    </div>
+  </section>
+
+<!-- ====== LIVE DASHBOARD ====== -->
+  <section id="dashboard" class="dashboard">
+    <div class="section-container">
+      <div class="section-header reveal-up">
+        <span class="section-tag"><i style="font-style:normal">🖥️</i> Command Center</span>
+        <h2 class="section-title">Fraud Analytics<br/><span class="gradient-text">Dashboard</span></h2>
+        <p class="section-desc">Every number here is calculated from the transactions you analyze, plus the model's measured test-set performance. Nothing is random or pre-filled.</p>
+      </div>
+      <div class="dashboard-preview reveal-up">
+        <div class="dashboard-window">
+          <div class="window-toolbar">
+            <div class="toolbar-dots"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div>
+            <div class="toolbar-title">FraudShield AI — Analytics</div>
+            <div class="toolbar-status"><div class="status-dot"></div> Model Ready</div>
+          </div>
+          <div class="dashboard-body">
+            <div class="dash-row top-row">
+              <div class="dash-card metric-card"><div class="metric-icon blue">⇄</div><div class="metric-info"><span class="metric-value" id="dTotal">0</span><span class="metric-label">Transactions Analyzed</span></div><div class="metric-trend up" id="dTotalSub"></div></div>
+              <div class="dash-card metric-card"><div class="metric-icon red">⚠️</div><div class="metric-info"><span class="metric-value" id="dFraud">0</span><span class="metric-label">Fraudulent</span></div><div class="metric-trend down" id="dFraudSub"></div></div>
+              <div class="dash-card metric-card"><div class="metric-icon green">🛡️</div><div class="metric-info"><span class="metric-value" id="dLegit">0</span><span class="metric-label">Legitimate</span></div><div class="metric-trend up" id="dLegitSub"></div></div>
+              <div class="dash-card metric-card"><div class="metric-icon purple">₹</div><div class="metric-info"><span class="metric-value" id="dValue">₹0</span><span class="metric-label">Value Flagged as Fraud</span></div><div class="metric-trend up" id="dValueSub"></div></div>
+            </div>
+            <div class="dash-row mid-row">
+              <div class="dash-card chart-card">
+                <div class="chart-header"><h4>Fraud risk of recent analyses</h4><div class="chart-legend"><span class="legend-item"><span class="legend-dot red"></span>Fraud</span><span class="legend-item"><span class="legend-dot blue"></span>Legitimate</span></div></div>
+                <div class="chart-area bars-area">
+                  <div class="axis-y"><span>100%</span><span>50%</span><span>0%</span></div>
+                  <svg class="chart-svg" viewBox="0 0 600 200" preserveAspectRatio="none" aria-label="Fraud probability of the last 20 analyses"><line x1="0" y1="0" x2="600" y2="0" class="grid-line"/><line x1="0" y1="100" x2="600" y2="100" class="grid-line thr"/><line x1="0" y1="199" x2="600" y2="199" class="grid-line"/><g id="barsG"></g></svg>
+                  <div class="chart-empty" id="barsEmpty">No transactions yet — analyze one above or load samples below.</div>
+                </div>
+                <p class="chart-cap">Last 20 analyses, oldest to newest · dashed line = 50% decision threshold</p>
+              </div>
+              <div class="dash-card risk-card">
+                <h4>Fraud vs legitimate</h4>
+                <div class="donut-wrap"><svg viewBox="0 0 160 160" class="donut" aria-hidden="true"><circle class="d-bg" cx="80" cy="80" r="60"/><circle id="dArcL" class="d-l" cx="80" cy="80" r="60" transform="rotate(-90 80 80)"/><circle id="dArcF" class="d-f" cx="80" cy="80" r="60" transform="rotate(-90 80 80)"/></svg><div class="donut-c"><b id="dPct">–</b><span>fraud share</span></div></div>
+                <div class="donut-leg"><span><i class="lg-f"></i>Fraud <b id="dLgF">0</b></span><span><i class="lg-l"></i>Legitimate <b id="dLgL">0</b></span></div>
+              </div>
+            </div>
+            <div class="dash-row mid-row eq">
+              <div class="dash-card"><h4>Analyses by transaction type</h4><div class="type-bars" id="typeBars"></div></div>
+              <div class="dash-card"><h4>Model performance <small class="muted">(hold-out test set)</small></h4>
+                <div class="perf-grid" id="perfGrid"></div>
+                <div class="cm" id="cm"></div>
+                <p class="chart-cap" id="perfCap"></p></div>
+            </div>
+            <div class="dash-row bottom-row">
+              <div class="dash-card feed-card">
+                <div class="feed-header"><h4>📡 Recent transactions</h4>
+                  <div class="feed-actions"><button type="button" class="demo-preset" id="loadSamples">Load 25 test-set samples</button><button type="button" class="demo-reset" id="clearDash">Clear dashboard</button></div></div>
+                <div class="feed-list" id="txFeed"></div>
+                <p class="chart-cap">Samples come from the model's held-out test set (stratified, ~20% fraud), so they are not representative of real-world fraud rates. "Actual" is the known label.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="dashboard-glow"></div>
+      </div>
+    </div>
+  </section>
+
+<!-- ====== PLATFORMS ====== -->
+  <section id="platforms" class="platforms">
+    <div class="section-container">
+      <div class="section-header reveal-up">
+        <span class="section-tag"><i class="fas fa-layer-group" style="font-style:normal">🗂️</i> Coverage</span>
+        <h2 class="section-title">Complete Protection Across<br/><span class="gradient-text">All Payment Channels</span></h2>
+        <p class="section-desc">One platform to guard every transaction — from traditional banking to modern digital payments.</p>
+      </div>
+      <div class="platforms-grid">
+        <!-- Banking -->
+        <div class="platform-card reveal-up" data-delay="0">
+          <div class="platform-3d">
+            <div class="platform-inner">
+              <div class="platform-icon">
+                <div class="icon-3d-cube">
+                  <div class="cube-face cube-front"><i class="fas fa-building-columns" style="font-style:normal">🏦</i></div>
+                  <div class="cube-face cube-back"><i class="fas fa-vault" style="font-style:normal">🏛️</i></div>
+                  <div class="cube-face cube-left"></div>
+                  <div class="cube-face cube-right"></div>
+                  <div class="cube-face cube-top"></div>
+                  <div class="cube-face cube-bottom"></div>
+                </div>
+              </div>
+              <h3>Banking</h3>
+              <p>NEFT, RTGS, IMPS, wire transfers — complete coverage of all banking transaction channels with deep integration.</p>
+              <div class="platform-features">
+                <span><i class="fas fa-check" style="font-style:normal">✓</i> Wire Transfer Monitoring</span>
+                <span><i class="fas fa-check" style="font-style:normal">✓</i> Account Takeover Detection</span>
+                <span><i class="fas fa-check" style="font-style:normal">✓</i> Synthetic ID Fraud</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- UPI -->
+        <div class="platform-card reveal-up" data-delay="100">
+          <div class="platform-3d">
+            <div class="platform-inner">
+              <div class="platform-icon icon-cyan">
+                <div class="icon-3d-cube">
+                  <div class="cube-face cube-front"><i class="fas fa-mobile-screen-button" style="font-style:normal">📱</i></div>
+                  <div class="cube-face cube-back"><i class="fas fa-qrcode" style="font-style:normal">▦</i></div>
+                  <div class="cube-face cube-left"></div>
+                  <div class="cube-face cube-right"></div>
+                  <div class="cube-face cube-top"></div>
+                  <div class="cube-face cube-bottom"></div>
+                </div>
+              </div>
+              <h3>UPI Payments</h3>
+              <p>Protect GPay, PhonePe, Paytm, and all UPI apps with AI that understands Indian digital payment patterns.</p>
+              <div class="platform-features">
+                <span><i class="fas fa-check" style="font-style:normal">✓</i> QR Code Scam Detection</span>
+                <span><i class="fas fa-check" style="font-style:normal">✓</i> SIM Swap Protection</span>
+                <span><i class="fas fa-check" style="font-style:normal">✓</i> Collect Request Fraud</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Credit Cards -->
+        <div class="platform-card reveal-up" data-delay="200">
+          <div class="platform-3d">
+            <div class="platform-inner">
+              <div class="platform-icon icon-purple">
+                <div class="icon-3d-cube">
+                  <div class="cube-face cube-front"><i class="fas fa-credit-card" style="font-style:normal">💳</i></div>
+                  <div class="cube-face cube-back"><i class="fas fa-nfc-symbol" style="font-style:normal">📶</i></div>
+                  <div class="cube-face cube-left"></div>
+                  <div class="cube-face cube-right"></div>
+                  <div class="cube-face cube-top"></div>
+                  <div class="cube-face cube-bottom"></div>
+                </div>
+              </div>
+              <h3>Credit Cards</h3>
+              <p>Visa, Mastercard, RuPay, Amex — detect CNP fraud, card skimming, and unauthorized charges instantly.</p>
+              <div class="platform-features">
+                <span><i class="fas fa-check" style="font-style:normal">✓</i> CNP Fraud Prevention</span>
+                <span><i class="fas fa-check" style="font-style:normal">✓</i> Card Cloning Detection</span>
+                <span><i class="fas fa-check" style="font-style:normal">✓</i> Chargeback Prevention</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Online Shopping -->
+        <div class="platform-card reveal-up" data-delay="300">
+          <div class="platform-3d">
+            <div class="platform-inner">
+              <div class="platform-icon icon-green">
+                <div class="icon-3d-cube">
+                  <div class="cube-face cube-front"><i class="fas fa-cart-shopping" style="font-style:normal">🛒</i></div>
+                  <div class="cube-face cube-back"><i class="fas fa-store" style="font-style:normal">🏪</i></div>
+                  <div class="cube-face cube-left"></div>
+                  <div class="cube-face cube-right"></div>
+                  <div class="cube-face cube-top"></div>
+                  <div class="cube-face cube-bottom"></div>
+                </div>
+              </div>
+              <h3>Online Shopping</h3>
+              <p>E-commerce fraud, promo abuse, return fraud, and fake seller detection for platforms like Amazon, Flipkart, and more.</p>
+              <div class="platform-features">
+                <span><i class="fas fa-check" style="font-style:normal">✓</i> Promotion Abuse Detection</span>
+                <span><i class="fas fa-check" style="font-style:normal">✓</i> Fake Review Filtering</span>
+                <span><i class="fas fa-check" style="font-style:normal">✓</i> Return Fraud Prevention</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== STATS SECTION ====== -->
+  <section id="stats" class="stats">
+    <div class="stats-bg">
+      <div class="stats-grid-bg"></div>
+    </div>
+    <div class="section-container">
+      <div class="section-header reveal-up">
+        <span class="section-tag"><i class="fas fa-chart-bar" style="font-style:normal">📊</i> Impact</span>
+        <h2 class="section-title">Measured Model<br/><span class="gradient-text">Performance</span></h2>
+        <p class="section-desc">Computed in your browser when this page loads, from the model's held-out test transactions.</p>
+      </div>
+      <div class="stats-row">
+        <div class="stat-block reveal-up" data-delay="0">
+          <div class="stat-3d">
+            <div class="stat-value">
+              <span class="stat-counter" data-target="2.5">0</span><span class="stat-unit">B+</span>
+            </div>
+            <div class="stat-title">Hold-out Accuracy</div>
+            <div class="stat-bar"><div class="stat-fill" style="--fill-width: 95%"></div></div>
+          </div>
+        </div>
+        <div class="stat-block reveal-up" data-delay="100">
+          <div class="stat-3d">
+            <div class="stat-value">
+              <span class="stat-counter" data-target="99.7">0</span><span class="stat-unit">%</span>
+            </div>
+            <div class="stat-title">Fraud Recall</div>
+            <div class="stat-bar"><div class="stat-fill" style="--fill-width: 99.7%"></div></div>
+          </div>
+        </div>
+        <div class="stat-block reveal-up" data-delay="200">
+          <div class="stat-3d">
+            <div class="stat-value">
+              <span class="stat-counter" data-target="50">0</span><span class="stat-unit">ms</span>
+            </div>
+            <div class="stat-title">Precision</div>
+            <div class="stat-bar"><div class="stat-fill" style="--fill-width: 88%"></div></div>
+          </div>
+        </div>
+        <div class="stat-block reveal-up" data-delay="300">
+          <div class="stat-3d">
+            <div class="stat-value">
+              <span class="stat-counter" data-target="850">0</span><span class="stat-unit">Cr+</span>
+            </div>
+            <div class="stat-title">Avg Inference Time</div>
+            <div class="stat-bar"><div class="stat-fill" style="--fill-width: 92%"></div></div>
+          </div>
+        </div>
+        <div class="stat-block reveal-up" data-delay="400">
+          <div class="stat-3d">
+            <div class="stat-value">
+              <span class="stat-counter" data-target="200">0</span><span class="stat-unit">+</span>
+            </div>
+            <div class="stat-title">Financial Institutions</div>
+            <div class="stat-bar"><div class="stat-fill" style="--fill-width: 80%"></div></div>
+          </div>
+        </div>
+        <div class="stat-block reveal-up" data-delay="500">
+          <div class="stat-3d">
+            <div class="stat-value">
+              <span class="stat-counter" data-target="0.02">0</span><span class="stat-unit">%</span>
+            </div>
+            <div class="stat-title">False Positive Rate</div>
+            <div class="stat-bar"><div class="stat-fill" style="--fill-width: 98%"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== TESTIMONIALS ====== -->
+  <section class="testimonials">
+    <div class="section-container">
+      <div class="section-header reveal-up">
+        <span class="section-tag"><i class="fas fa-quote-left" style="font-style:normal">❝</i> Trusted By Leaders</span>
+        <h2 class="section-title">What Our Clients<br/><span class="gradient-text">Say About Us</span></h2>
+      </div>
+      <div class="testimonials-slider reveal-up">
+        <div class="testimonial-card active">
+          <div class="testimonial-stars">
+            <i class="fas fa-star" style="font-style:normal">★</i><i class="fas fa-star" style="font-style:normal">★</i><i class="fas fa-star" style="font-style:normal">★</i><i class="fas fa-star" style="font-style:normal">★</i><i class="fas fa-star" style="font-style:normal">★</i>
+          </div>
+          <p class="testimonial-text">"FraudShield AI reduced our fraud losses by 94% within the first quarter. The real-time detection capability is unmatched in the industry."</p>
+          <div class="testimonial-author">
+            <div class="author-avatar">RK</div>
+            <div class="author-info">
+              <span class="author-name">Rajesh Kumar</span>
+              <span class="author-role">CTO, National Banking Corp</span>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <div class="testimonial-stars">
+            <i class="fas fa-star" style="font-style:normal">★</i><i class="fas fa-star" style="font-style:normal">★</i><i class="fas fa-star" style="font-style:normal">★</i><i class="fas fa-star" style="font-style:normal">★</i><i class="fas fa-star" style="font-style:normal">★</i>
+          </div>
+          <p class="testimonial-text">"The UPI fraud detection is phenomenal. We went from thousands of fraud complaints monthly to single digits. The AI keeps getting better every day."</p>
+          <div class="testimonial-author">
+            <div class="author-avatar">PS</div>
+            <div class="author-info">
+              <span class="author-name">Priya Sharma</span>
+              <span class="author-role">VP Security, DigitalPay India</span>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <div class="testimonial-stars">
+            <i class="fas fa-star" style="font-style:normal">★</i><i class="fas fa-star" style="font-style:normal">★</i><i class="fas fa-star" style="font-style:normal">★</i><i class="fas fa-star" style="font-style:normal">★</i><i class="fas fa-star" style="font-style:normal">★</i>
+          </div>
+          <p class="testimonial-text">"Integration was seamless — we were up and running in 48 hours. The autonomous AI agents handle 85% of alerts without any human involvement."</p>
+          <div class="testimonial-author">
+            <div class="author-avatar">AM</div>
+            <div class="author-info">
+              <span class="author-name">Ankit Mehta</span>
+              <span class="author-role">Head of Risk, ShopEasy</span>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-dots">
+          <span class="t-dot active" data-index="0"></span>
+          <span class="t-dot" data-index="1"></span>
+          <span class="t-dot" data-index="2"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== CTA SECTION ====== -->
+  <section id="contact" class="cta">
+    <div class="cta-bg">
+      <div class="cta-orb orb-1"></div>
+      <div class="cta-orb orb-2"></div>
+      <div class="cta-orb orb-3"></div>
+    </div>
+    <div class="section-container">
+      <div class="cta-content reveal-up">
+        <h2 class="cta-title">Ready to Shield Your <span class="gradient-text">Finances with AI?</span></h2>
+        <p class="cta-desc">Check a transaction in seconds. The model runs entirely in your browser: no account, no sign-up, no data leaving your device.</p>
+        <div class="cta-buttons">
+          <button class="btn btn-primary btn-large" type="button" data-go="#demo" data-focus="1">
+            <span>Analyze a Transaction</span>
+            <i class="fas fa-rocket" style="font-style:normal">🚀</i>
+            <div class="btn-shine"></div>
+          </button>
+          <button class="btn btn-secondary btn-large" type="button" data-go="#dashboard">
+            <i class="fas fa-chart-line" style="font-style:normal">📊</i>
+            <span>View Dashboard</span>
+          </button>
+        </div>
+        <div class="cta-trust">
+          <span><i class="fas fa-shield-check" style="font-style:normal">🛡️</i> Runs in your browser</span>
+          <span><i class="fas fa-lock" style="font-style:normal">🔒</i> No data leaves your device</span>
+          <span><i class="fas fa-award" style="font-style:normal">🏆</i> No login required</span>
+          <span><i class="fas fa-user-shield" style="font-style:normal">🛡️</i> Measured model metrics</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== FOOTER ====== -->
+  <footer class="footer">
+    <div class="footer-top">
+      <div class="section-container">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <a href="#" class="logo">
+              <div class="logo-icon"><i class="fas fa-shield-halved" style="font-style:normal">🛡️</i></div>
+              <span class="logo-text">Fraud<span class="accent">Shield</span> AI</span>
+            </a>
+            <p>Next-generation AI-powered fraud detection and prevention for the modern financial ecosystem.</p>
+            <div class="footer-socials">
+              <a href="#"><i class="fab fa-twitter" style="font-style:normal">𝕏</i></a>
+              <a href="#"><i class="fab fa-linkedin-in" style="font-style:normal">in</i></a>
+              <a href="#"><i class="fab fa-github" style="font-style:normal">⌥</i></a>
+              <a href="#"><i class="fab fa-youtube" style="font-style:normal">▶</i></a>
+            </div>
+          </div>
+          <div class="footer-links">
+            <h4>Product</h4>
+            <a href="#">Features</a>
+            <a href="#">Pricing</a>
+            <a href="#">API Docs</a>
+            <a href="#">Integrations</a>
+            <a href="#">Changelog</a>
+          </div>
+          <div class="footer-links">
+            <h4>Company</h4>
+            <a href="#">About Us</a>
+            <a href="#">Careers</a>
+            <a href="#">Blog</a>
+            <a href="#">Press Kit</a>
+            <a href="#">Partners</a>
+          </div>
+          <div class="footer-links">
+            <h4>Resources</h4>
+            <a href="#">Documentation</a>
+            <a href="#">Case Studies</a>
+            <a href="#">Whitepapers</a>
+            <a href="#">Webinars</a>
+            <a href="#">Support</a>
+          </div>
+          <div class="footer-links">
+            <h4>Legal</h4>
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+            <a href="#">Cookie Policy</a>
+            <a href="#">Security</a>
+            <a href="#">Compliance</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="section-container">
+        <p>&copy; 2026 FraudShield AI. All rights reserved. Built with <i class="fas fa-heart" style="font-style:normal">♥</i> for a safer digital world.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+/* ============================================
+   FRAUDSHIELD AI — JAVASCRIPT
+   ============================================ */
+
+// ====== PRELOADER ======
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.getElementById('preloader').classList.add('hidden');
+  }, 2000);
+});
+
+// ====== PARTICLE SYSTEM ======
+(function initParticles() {
+  const canvas = document.getElementById('particles');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+  let mouse = { x: -1000, y: -1000 };
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  document.addEventListener('mousemove', (e) => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+  });
+
+  class Particle {
+    constructor() {
+      this.reset();
+    }
+    reset() {
+      this.x = Math.random() * canvas.width;
+      this.y = Math.random() * canvas.height;
+      this.size = Math.random() * 2 + 0.5;
+      this.speedX = (Math.random() - 0.5) * 0.5;
+      this.speedY = (Math.random() - 0.5) * 0.5;
+      this.opacity = Math.random() * 0.5 + 0.1;
+      this.color = ['59,130,246', '139,92,246', '6,182,212'][Math.floor(Math.random() * 3)];
+    }
+    update() {
+      this.x += this.speedX;
+      this.y += this.speedY;
+
+      // Mouse interaction
+      const dx = mouse.x - this.x;
+      const dy = mouse.y - this.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 150) {
+        this.x -= dx * 0.01;
+        this.y -= dy * 0.01;
+        this.opacity = Math.min(this.opacity + 0.02, 0.8);
+      }
+
+      if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+        this.reset();
+      }
+    }
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${this.color}, ${this.opacity})`;
+      ctx.fill();
+    }
+  }
+
+  // Create particles
+  const count = Math.min(Math.floor((canvas.width * canvas.height) / 12000), 150);
+  for (let i = 0; i < count; i++) {
+    particles.push(new Particle());
+  }
+
+  function connectParticles() {
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 120) {
+          ctx.beginPath();
+          ctx.strokeStyle = `rgba(59, 130, 246, ${0.08 * (1 - dist / 120)})`;
+          ctx.lineWidth = 0.5;
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      p.update();
+      p.draw();
+    });
+    connectParticles();
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+
+// ====== CURSOR GLOW ======
+(function initCursorGlow() {
+  const glow = document.getElementById('cursor-glow');
+  let glowX = 0, glowY = 0, currentX = 0, currentY = 0;
+
+  document.addEventListener('mousemove', (e) => {
+    glowX = e.clientX;
+    glowY = e.clientY;
+  });
+
+  function animateGlow() {
+    currentX += (glowX - currentX) * 0.08;
+    currentY += (glowY - currentY) * 0.08;
+    glow.style.left = currentX + 'px';
+    glow.style.top = currentY + 'px';
+    requestAnimationFrame(animateGlow);
+  }
+  animateGlow();
+})();
+
+// ====== NAVBAR ======
+(function initNavbar() {
+  const navbar = document.getElementById('navbar');
+  const links = document.querySelectorAll('.nav-links a');
+  const sections = document.querySelectorAll('section[id]');
+
+  window.addEventListener('scroll', () => {
+    // Scrolled state
+    navbar.classList.toggle('scrolled', window.scrollY > 50);
+
+    // Active link
+    let current = '';
+    sections.forEach(section => {
+      const top = section.offsetTop - 200;
+      if (window.scrollY >= top) {
+        current = section.getAttribute('id');
+      }
+    });
+    links.forEach(link => {
+      link.classList.toggle('active', link.getAttribute('href') === '#' + current);
+    });
+  });
+
+  // Smooth scroll
+  links.forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const target = document.querySelector(link.getAttribute('href'));
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  });
+})();
+
+// ====== SCROLL REVEAL ======
+(function initScrollReveal() {
+  const reveals = document.querySelectorAll('.reveal-up, .reveal-left, .reveal-right');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const delay = entry.target.dataset.delay || 0;
+        setTimeout(() => {
+          entry.target.classList.add('revealed');
+        }, parseInt(delay));
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+  reveals.forEach(el => observer.observe(el));
+})();
+
+// ====== HERO STATS COUNTER ======
+(function initHeroCounters() {
+  const counters = document.querySelectorAll('.stat-num[data-count]');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const target = parseFloat(entry.target.dataset.count);
+        animateCounter(entry.target, target, 2000);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.5 });
+
+  counters.forEach(c => observer.observe(c));
+})();
+
+function animateCounter(element, target, duration) {
+  const start = performance.now();
+  const isDecimal = target % 1 !== 0;
+
+  function update(timestamp) {
+    const elapsed = timestamp - start;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3); // ease out cubic
+    const current = target * eased;
+
+    if (isDecimal) {
+      element.textContent = current.toFixed(1);
+    } else {
+      element.textContent = Math.floor(current);
+    }
+
+    if (progress < 1) {
+      requestAnimationFrame(update);
+    } else {
+      if (isDecimal) {
+        element.textContent = target.toFixed(1);
+      } else {
+        element.textContent = target;
+      }
+    }
+  }
+  requestAnimationFrame(update);
+}
+
+// ====== DASHBOARD COUNTERS ======
+(function initDashCounters() {
+  const counters = document.querySelectorAll('.counter[data-target]');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const target = parseInt(entry.target.dataset.target);
+        animateDashCounter(entry.target, target, 2500);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.5 });
+
+  counters.forEach(c => observer.observe(c));
+})();
+
+function animateDashCounter(element, target, duration) {
+  const start = performance.now();
+
+  function update(timestamp) {
+    const elapsed = timestamp - start;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const current = Math.floor(target * eased);
+    element.textContent = current.toLocaleString();
+
+    if (progress < 1) {
+      requestAnimationFrame(update);
+    } else {
+      element.textContent = target.toLocaleString();
+    }
+  }
+  requestAnimationFrame(update);
+}
+
+// ====== STATS SECTION COUNTERS ======
+(function initStatCounters() {
+  const counters = document.querySelectorAll('.stat-counter[data-target]');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const target = parseFloat(entry.target.dataset.target);
+        animateCounter(entry.target, target, 2500);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.3 });
+
+  counters.forEach(c => observer.observe(c));
+})();
+
+// ====== STAT BAR FILLS ======
+(function initStatBars() {
+  const fills = document.querySelectorAll('.stat-fill');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('animated');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.3 });
+
+  fills.forEach(f => observer.observe(f));
+})();
+
+// ====== TIMELINE PROGRESS ======
+(function initTimelineProgress() {
+  const timeline = document.querySelector('.timeline');
+  if (!timeline) return;
+  const progress = document.querySelector('.timeline-progress');
+
+  window.addEventListener('scroll', () => {
+    const rect = timeline.getBoundingClientRect();
+    const timelineTop = rect.top;
+    const timelineHeight = rect.height;
+    const windowHeight = window.innerHeight;
+
+    if (timelineTop < windowHeight && timelineTop + timelineHeight > 0) {
+      const scrolled = Math.min(Math.max((windowHeight - timelineTop) / (timelineHeight + windowHeight), 0), 1);
+      progress.style.height = (scrolled * 100) + '%';
+    }
+  });
+})();
+
+// ====== LIVE FEED ======
+(function initLiveFeed() {
+  const feed = document.getElementById('liveFeed');
+  if (!feed) return;
+
+  const types = ['UPI', 'NEFT', 'CARD', 'IMPS', 'RTGS', 'EMI'];
+  const results = [
+    { text: 'APPROVED', class: 'approved', statusClass: 'safe' },
+    { text: 'APPROVED', class: 'approved', statusClass: 'safe' },
+    { text: 'APPROVED', class: 'approved', statusClass: 'safe' },
+    { text: 'APPROVED', class: 'approved', statusClass: 'safe' },
+    { text: 'FLAGGED', class: 'flagged', statusClass: 'warning' },
+    { text: 'BLOCKED', class: 'blocked', statusClass: 'danger' },
+  ];
+
+  function generateId() {
+    return 'TXN-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+  }
+
+  function generateAmount() {
+    const amounts = [
+      '₹' + (Math.floor(Math.random() * 50000) + 100).toLocaleString(),
+      '₹' + (Math.floor(Math.random() * 500000) + 10000).toLocaleString(),
+      '₹' + (Math.floor(Math.random() * 2000) + 50).toLocaleString(),
+    ];
+    return amounts[Math.floor(Math.random() * amounts.length)];
+  }
+
+  function addFeedItem() {
+    const type = types[Math.floor(Math.random() * types.length)];
+    const result = results[Math.floor(Math.random() * results.length)];
+    const now = new Date();
+    const time = now.getHours().toString().padStart(2, '0') + ':' +
+                 now.getMinutes().toString().padStart(2, '0') + ':' +
+                 now.getSeconds().toString().padStart(2, '0');
+
+    const item = document.createElement('div');
+    item.className = 'feed-item';
+    item.innerHTML = `
+      <span class="feed-status ${result.statusClass}"></span>
+      <span class="feed-id">${generateId()}</span>
+      <span class="feed-type">${type}</span>
+      <span class="feed-amount">${generateAmount()}</span>
+      <span class="feed-result ${result.class}">${result.text}</span>
+      <span class="feed-time">${time}</span>
+    `;
+
+    feed.insertBefore(item, feed.firstChild);
+
+    // Keep max items
+    while (feed.children.length > 6) {
+      feed.removeChild(feed.lastChild);
+    }
+  }
+
+  // Initial items
+  for (let i = 0; i < 5; i++) {
+    setTimeout(() => addFeedItem(), i * 200);
+  }
+
+  // Add new items periodically
+  setInterval(addFeedItem, 2500);
+})();
+
+// ====== TESTIMONIALS SLIDER ======
+(function initTestimonials() {
+  const cards = document.querySelectorAll('.testimonial-card');
+  const dots = document.querySelectorAll('.t-dot');
+  let current = 0;
+
+  function showSlide(index) {
+    cards.forEach(c => c.classList.remove('active'));
+    dots.forEach(d => d.classList.remove('active'));
+    cards[index].classList.add('active');
+    dots[index].classList.add('active');
+    current = index;
+  }
+
+  dots.forEach(dot => {
+    dot.addEventListener('click', () => {
+      showSlide(parseInt(dot.dataset.index));
+    });
+  });
+
+  // Auto-rotate
+  setInterval(() => {
+    showSlide((current + 1) % cards.length);
+  }, 5000);
+})();
+
+// ====== 3D TILT ON CARDS ======
+(function init3DTilt() {
+  const cards = document.querySelectorAll('.platform-3d, .stat-3d');
+
+  cards.forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      const rotateX = (y - centerY) / centerY * -8;
+      const rotateY = (x - centerX) / centerX * 8;
+
+      card.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-8px)`;
+    });
+
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = '';
+    });
+  });
+})();
+
+// ML_START
+const FS = (function () {
+  function rng(seed){let a=seed>>>0;return()=>{a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
+  const TYPES=['PAYMENT','TRANSFER','CASH_OUT','CASH_IN','DEBIT'];
+  const gauss=r=>{let u=0;while(!u)u=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*r())};
+  const pick=(r,w)=>{let s=r(),c=0;for(let i=0;i<w.length;i++){c+=w[i];if(s<c)return i}return w.length-1};
+  const ln=(m,s,r)=>Math.round(Math.exp(Math.log(m)+s*gauss(r)));
+  const tracked=t=>t==='TRANSFER'||t==='CASH_OUT';
+  // Synthetic transactions following the PaySim schema (type, amount, old/new balance of sender and receiver).
+  function gen(r){
+    let type=TYPES[pick(r,[.34,.12,.30,.20,.04])],fraud=false;
+    if(tracked(type)&&r()<0.14){fraud=true}
+    const t={type,hour:0,oldOrg:0,newOrg:0,oldDest:0,newDest:0,amount:0,fraud};
+    if(fraud){
+      t.oldOrg=Math.max(2000,ln(120000,1.3,r));
+      if(r()<0.85){t.amount=t.oldOrg;t.newOrg=0}else{t.amount=Math.round(t.oldOrg*(0.5+0.45*r()));t.newOrg=t.oldOrg-t.amount}
+      if(r()<0.6){t.oldDest=0;t.newDest=0}else{t.oldDest=ln(40000,1.5,r);t.newDest=t.oldDest+t.amount}
+      t.hour=r()<0.35?Math.floor(r()*6):6+Math.floor(r()*18);
+    }else{
+      t.oldOrg=Math.max(1000,ln(15000,1.5,r));
+      if(type==='CASH_IN'){t.amount=Math.max(10,ln(60000,1.1,r));t.newOrg=t.oldOrg+t.amount}
+      else{const f=r()<0.04?1:Math.min(0.98,-Math.log(1-r())*0.18);t.amount=Math.max(10,Math.round(t.oldOrg*f));t.newOrg=t.oldOrg-t.amount}
+      if(tracked(type)){t.oldDest=r()<0.25?0:ln(40000,1.6,r);t.newDest=r()<0.08?t.oldDest:t.oldDest+t.amount}
+      t.hour=r()<0.07?Math.floor(r()*6):6+Math.floor(r()*18);
+    }
+    if(r()<0.005)t.fraud=!t.fraud;
+    return t;
+  }
+  const risky=t=>+tracked(t.type),inr=n=>'₹'+Math.round(n).toLocaleString('en-IN');
+  const errO=t=>Math.min(1,Math.abs(t.newOrg-(t.type==='CASH_IN'?t.oldOrg+t.amount:t.oldOrg-t.amount))/(t.amount+1));
+  const errD=t=>risky(t)?Math.min(1,Math.abs(t.newDest-(t.oldDest+t.amount))/(t.amount+1)):0;
+  const drain=t=>+(t.oldOrg>0&&t.newOrg===0&&t.type!=='CASH_IN');
+  const FEATS=[
+    ['amt',t=>Math.log1p(t.amount),t=>`Large transaction value (${inr(t.amount)})`,t=>`Modest transaction value (${inr(t.amount)})`],
+    ['frac',t=>Math.min(1.5,t.amount/(t.oldOrg+1)),t=>`Moves ${Math.round(100*t.amount/(t.oldOrg+1))}% of the sender's balance`,t=>`Uses only ${Math.round(100*t.amount/(t.oldOrg+1))}% of the sender's balance`],
+    ['drain',drain,()=>'Sender account is left with ₹0',()=>'Sender keeps a balance afterwards'],
+    ['drainRisky',t=>drain(t)*risky(t),()=>'Whole balance emptied via transfer / cash-out — classic account-takeover pattern',()=>'No account-emptying pattern'],
+    ['errOrg',errO,()=>"Sender balances don't add up (before vs after)",()=>'Sender balances are consistent'],
+    ['errDest',errD,()=>"Receiver balances don't add up (before vs after)",()=>'Receiver balances are consistent'],
+    ['destEmpty',t=>risky(t)*+(t.oldDest===0),()=>'Receiver account was empty before — typical of mule accounts',()=>'Receiver account already held funds'],
+    ['destFlat',t=>risky(t)*+(t.newDest===t.oldDest),()=>'Receiver balance did not increase after the transfer',()=>'Receiver balance increased as expected'],
+    ['oldOrg',t=>Math.log1p(t.oldOrg),t=>`High sender balance (${inr(t.oldOrg)}) — a valuable target`,t=>`Low sender balance (${inr(t.oldOrg)})`],
+    ['night',t=>+(t.hour<=5),t=>`Made at ${String(t.hour).padStart(2,'0')}:00 — unusual night-time hour`,()=>'Made at a normal daytime hour']
+  ].concat(TYPES.map(k=>['t_'+k,t=>+(t.type===k),t=>`${k.replace('_',' ')} is a higher-risk transaction type`,t=>`${t.type.replace('_',' ')} is a lower-risk transaction type`]));
+  const vec=t=>FEATS.map(f=>f[1](t)),sig=z=>1/(1+Math.exp(-z));
+  function auc(ps,ys){const idx=ps.map((p,i)=>i).sort((a,b)=>ps[a]-ps[b]);let rs=0,np=0;idx.forEach((i,k)=>{if(ys[i]){rs+=k+1;np++}});return(rs-np*(np+1)/2)/(np*(ys.length-np))}
+  const r=rng(20260611),data=[];for(let i=0;i<12000;i++)data.push(gen(r));
+  const split=9600,train=data.slice(0,split),test=data.slice(split);
+  const X=train.map(vec),d=X[0].length,mu=Array(d).fill(0),sd=Array(d).fill(0);
+  X.forEach(x=>x.forEach((v,j)=>mu[j]+=v/X.length));
+  X.forEach(x=>x.forEach((v,j)=>sd[j]+=(v-mu[j])**2/X.length));sd.forEach((v,j)=>sd[j]=Math.sqrt(v)||1);
+  const Z=X.map(x=>x.map((v,j)=>(v-mu[j])/sd[j])),Y=train.map(t=>+t.fraud);
+  const w=Array(d).fill(0);let b=0;const PW=4,L2=1e-3,LR=0.3;
+  for(let ep=0;ep<400;ep++){const gw=Array(d).fill(0);let gb=0;
+    for(let i=0;i<Z.length;i++){const e=(sig(Z[i].reduce((s,v,j)=>s+v*w[j],b))-Y[i])*(Y[i]?PW:1);gb+=e;for(let j=0;j<d;j++)gw[j]+=e*Z[i][j]}
+    const n=Z.length;b-=LR*gb/n;for(let j=0;j<d;j++)w[j]-=LR*(gw[j]/n+L2*w[j])}
+  function predictWith(P,t){
+    const z=vec(t).map((v,j)=>(v-P.mu[j])/P.sd[j]),p=sig(z.reduce((s,v,j)=>s+v*P.w[j],P.b));
+    const contrib=FEATS.map((f,j)=>({k:f[0],c:z[j]*P.w[j],text:z[j]*P.w[j]>=0?f[2](t):f[3](t)}));
+    const score=Math.round(p*1000)/10;
+    return{p,score,fraud:p>=0.5,level:p>=.75?'critical':p>=.5?'high':p>=.25?'medium':'low',contrib};
+  }
+  const predict=t=>predictWith({mu,sd,w,b},t);
+  const ps=test.map(t=>predict(t).p),ys=test.map(t=>+t.fraud);
+  let tp=0,fp=0,fn=0,tn=0;ps.forEach((p,i)=>{const pr=p>=.5;if(pr&&ys[i])tp++;else if(pr)fp++;else if(ys[i])fn++;else tn++});
+  const M={accuracy:(tp+tn)/ps.length,precision:tp/Math.max(1,tp+fp),recall:tp/Math.max(1,tp+fn),auc:auc(ps,ys),n:ps.length,trainN:train.length,tp,fp,fn,tn,features:d};
+  M.f1=2*M.precision*M.recall/Math.max(1e-9,M.precision+M.recall);
+  return{predict,predictWith,metrics:M,test,train,data,TYPES,gen,rng,scores:ps,labels:ys,
+    featureNames:FEATS.map(f=>f[0]),params:{mu:mu.slice(),sd:sd.slice(),w:w.slice(),b},
+    config:{seed:20260611,records:12000,trainRecords:split,testRecords:12000-split,epochs:400,learningRate:LR,l2:L2,fraudClassWeight:PW,threshold:0.5}};
+})();
+// ML_END
+
+
+/* ====== APP: ANALYZER, DASHBOARD, NAVIGATION ====== */
+(function(){
+  const $=id=>document.getElementById(id),M=FS.metrics,pct=(v,d=1)=>(v*100).toFixed(d)+'%';
+  const inr=n=>'₹'+Math.round(n).toLocaleString('en-IN');
+  const inrShort=n=>n>=1e7?'₹'+(n/1e7).toFixed(2)+' Cr':n>=1e5?'₹'+(n/1e5).toFixed(2)+' L':inr(n);
+  const tracked=t=>t==='TRANSFER'||t==='CASH_OUT';
+  const TL={PAYMENT:'Payment',TRANSFER:'Transfer',CASH_OUT:'Cash out',CASH_IN:'Cash in',DEBIT:'Debit'};
+
+  /* ---- real, measured numbers for hero + performance section ---- */
+  const probe={type:'TRANSFER',hour:3,amount:50000,oldOrg:50000,newOrg:0,oldDest:0,newDest:0};
+  const t0=performance.now();for(let i=0;i<1000;i++)FS.predict(probe);const us=Math.max(1,Math.round((performance.now()-t0)/1000*1000));
+  const setCount=(el,v)=>{if(el){el.dataset.count=v;el.dataset.target=v}};
+  const hs=document.querySelectorAll('.hero-stat');
+  const heroVals=[[M.accuracy*100,'Hold-out Accuracy','%'],[M.recall*100,'Fraud Recall','%'],[us,'Inference Time','µs']];
+  hs.forEach((h,i)=>{if(!heroVals[i])return;const n=h.querySelector('.stat-num'),v=heroVals[i][0];setCount(n,i<2?Math.round(v*10)/10:v);h.querySelector('.stat-label').textContent=heroVals[i][1];h.querySelector('.stat-suffix').textContent=heroVals[i][2]});
+  const sc=document.querySelectorAll('.stat-counter'),sv=[[M.accuracy*100,'%'],[M.recall*100,'%'],[M.precision*100,'%'],[us,'µs']];
+  sc.forEach((c,i)=>{if(!sv[i])return;setCount(c,Math.round(sv[i][0]*10)/10);c.parentElement.querySelector('.stat-unit').textContent=sv[i][1];const f=c.closest('.stat-3d').querySelector('.stat-fill');if(f)f.style.setProperty('--fill-width',i<3?sv[i][0]+'%':'100%')});
+  $('modelNote').textContent='About this demo: a logistic-regression model trained in your browser on '+M.trainN.toLocaleString('en-IN')+' synthetic transactions that follow the PaySim schema (type, amount, sender and receiver balances before/after). No data leaves your device. Real-world accuracy would require real bank data.';
+
+  /* ---- form ---- */
+  const F={type:$('txType'),amt:$('txAmount'),hour:$('txHour'),oo:$('txOldOrg'),no:$('txNewOrg'),od:$('txOldDest'),nd:$('txNewDest')};
+  for(let h=0;h<24;h++){const o=document.createElement('option');o.value=h;o.textContent=String(h).padStart(2,'0')+':00';F.hour.appendChild(o)}F.hour.value=14;
+  const manual={no:false,nd:false};
+  function syncType(){const tr=tracked(F.type.value);[F.od,F.nd].forEach(i=>i.readOnly=!tr);
+    if(!tr){F.od.value=0;F.nd.value=0}
+    $('destHint').textContent=tr?'':'Receiver is a merchant for this type, so receiver balances are not recorded (kept at 0).';autoCalc()}
+  function autoCalc(){const a=+F.amt.value,oo=+F.oo.value,tr=tracked(F.type.value);
+    if(!manual.no&&isFinite(a)&&isFinite(oo))F.no.value=Math.max(0,Math.round((F.type.value==='CASH_IN'?oo+a:oo-a)*100)/100);
+    if(tr&&!manual.nd&&isFinite(a)&&isFinite(+F.od.value))F.nd.value=Math.round((+F.od.value+a)*100)/100}
+  F.type.addEventListener('change',syncType);
+  [F.amt,F.oo,F.od].forEach(i=>i.addEventListener('input',autoCalc));
+  F.no.addEventListener('input',()=>manual.no=true);F.nd.addEventListener('input',()=>manual.nd=true);
+  function fill(p){F.type.value=p.type;F.amt.value=p.amount;F.hour.value=p.hour;F.oo.value=p.oldOrg;F.no.value=p.newOrg;F.od.value=p.oldDest;F.nd.value=p.newDest;manual.no=manual.nd=true;
+    const tr=tracked(p.type);[F.od,F.nd].forEach(i=>i.readOnly=!tr);$('destHint').textContent=tr?'':'Receiver is a merchant for this type, so receiver balances are not recorded (kept at 0).'}
+  const PRE={'Everyday payment':{type:'PAYMENT',hour:13,amount:1200,oldOrg:50000,newOrg:48800,oldDest:0,newDest:0},
+    'Salary cash-in':{type:'CASH_IN',hour:11,amount:42000,oldOrg:8000,newOrg:50000,oldDest:0,newDest:0},
+    'Normal transfer':{type:'TRANSFER',hour:16,amount:15000,oldOrg:90000,newOrg:75000,oldDest:60000,newDest:75000},
+    'Account drained to new account':{type:'TRANSFER',hour:3,amount:181000,oldOrg:181000,newOrg:0,oldDest:0,newDest:0},
+    'Cash-out after takeover':{type:'CASH_OUT',hour:2,amount:215000,oldOrg:215000,newOrg:0,oldDest:21182,newDest:236182}};
+  Object.keys(PRE).forEach(k=>{const b=document.createElement('button');b.className='demo-preset';b.type='button';b.textContent=k;b.onclick=()=>{fill(PRE[k]);run()};$('presets').appendChild(b)});
+  function read(){const t={type:F.type.value,hour:+F.hour.value,amount:+F.amt.value,oldOrg:+F.oo.value,newOrg:+F.no.value,oldDest:+F.od.value,newDest:+F.nd.value};
+    for(const k of['amount','oldOrg','newOrg','oldDest','newDest'])if(F[{amount:'amt',oldOrg:'oo',newOrg:'no',oldDest:'od',newDest:'nd'}[k]].value===''||!isFinite(t[k])||t[k]<0)return{err:'Please enter a valid, non-negative number in every amount and balance field.'};
+    if(!(t.amount>0))return{err:'Transaction amount must be greater than 0.'};return{t}}
+
+  /* ---- persistence ---- */
+  const KEY='fraudshield_v2_txns';let S=[],counter=0,sp={f:0,l:0};
+  try{const j=JSON.parse(localStorage.getItem(KEY)||'null');if(j&&Array.isArray(j.s)){S=j.s;counter=j.c||S.length;sp=j.sp||sp}}catch(e){}
+  const save=()=>{try{localStorage.setItem(KEY,JSON.stringify({s:S.slice(-500),c:counter,sp}))}catch(e){}};
+  function add(t,m,src,actual){S.push({id:'TX-'+String(++counter).padStart(4,'0'),t,p:m.p,fraud:m.fraud,src,actual,ts:Date.now()});if(S.length>500)S.shift();save()}
+
+  /* ---- analyze ---- */
+  const LABEL={low:'LOW RISK',medium:'MEDIUM RISK',high:'HIGH RISK',critical:'CRITICAL RISK'};
+  const ADVICE={low:'This transaction looks normal. It can be approved.',medium:'Some unusual signals. Ask for extra verification (OTP or biometrics) before approving.',high:'This transaction is likely fraudulent. Block it and contact the account holder.',critical:'Very likely fraud. Block it immediately and secure the account. In India, report on 1930 / cybercrime.gov.in if money was lost.'};
+  function run(){const r=read(),err=$('demoError');
+    if(r.err){err.textContent=r.err;err.hidden=false;return}
+    err.hidden=true;const m=FS.predict(r.t),panel=$('resultPanel');
+    $('resEmpty').hidden=true;$('resOut').hidden=false;panel.className='demo-card an-result lvl-'+m.level;
+    $('verdict').textContent=m.fraud?'🚨 FRAUD':'✅ LEGITIMATE';$('levelChip').textContent=LABEL[m.level];$('demoAdvice').textContent=ADVICE[m.level];
+    $('demoScore').textContent=m.score.toFixed(1);const arc=$('gArc');arc.style.strokeDashoffset=377;requestAnimationFrame(()=>requestAnimationFrame(()=>arc.style.strokeDashoffset=377*(1-m.p)));
+    const t=r.t;$('resMeta').innerHTML=[TL[t.type],inr(t.amount),'sender '+inr(t.oldOrg)+' → '+inr(t.newOrg),tracked(t.type)?'receiver '+inr(t.oldDest)+' → '+inr(t.newDest):'merchant receiver',String(t.hour).padStart(2,'0')+':00'].map(x=>'<span>'+x+'</span>').join('');
+    const s=m.contrib.slice().sort((a,b)=>b.c-a.c),bad=s.filter(x=>x.c>0.2).slice(0,5),good=s.slice().reverse().filter(x=>x.c<-0.2&&x.k.indexOf('t_')!==0).slice(0,4);
+    const fillList=(id,a,cls,none)=>{const ul=$(id);ul.innerHTML='';(a.length?a:[{text:none}]).forEach(x=>{const li=document.createElement('li');li.className=a.length?cls:'s-none';li.textContent=x.text;ul.appendChild(li)})};
+    fillList('badList',bad,'s-bad','No notable risk factors.');fillList('goodList',good,'s-ok','No strong risk-lowering signals.');
+    $('resFoot').textContent='Model output: P(fraud) = '+m.p.toFixed(4)+' · decision threshold 0.50 · added to dashboard';
+    add(t,m,'you');render();
+    if(innerWidth<1025)panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+  $('demoCheck').addEventListener('click',run);
+  document.querySelectorAll('.tx-field input').forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter')run()}));
+  function reset(){fill({type:'PAYMENT',hour:14,amount:1200,oldOrg:50000,newOrg:48800,oldDest:0,newDest:0});manual.no=manual.nd=false;$('demoError').hidden=true;$('resOut').hidden=true;$('resEmpty').hidden=false;$('resultPanel').className='demo-card an-result';F.amt.focus()}
+  $('demoReset').addEventListener('click',reset);
+
+  /* ---- dashboard ---- */
+  const svgNS='http://www.w3.org/2000/svg';
+  function render(){
+    const n=S.length,fr=S.filter(x=>x.fraud),nf=fr.length,nl=n-nf,val=fr.reduce((s,x)=>s+x.t.amount,0);
+    $('dTotal').textContent=n.toLocaleString('en-IN');$('dFraud').textContent=nf.toLocaleString('en-IN');$('dLegit').textContent=nl.toLocaleString('en-IN');$('dValue').textContent=inrShort(val);
+    $('dTotalSub').textContent=n?S.filter(x=>x.src==='you').length+' by you':'none yet';$('dFraudSub').textContent=n?pct(nf/n)+' of total':'–';$('dLegitSub').textContent=n?pct(nl/n)+' of total':'–';$('dValueSub').textContent=n?'of '+inrShort(S.reduce((s,x)=>s+x.t.amount,0)):'–';
+    // bars
+    const g=$('barsG');g.innerHTML='';const last=S.slice(-20),bw=600/20;last.forEach((x,i)=>{const h=Math.max(2,x.p*198),r=document.createElementNS(svgNS,'rect');r.setAttribute('x',(i*bw+4).toFixed(1));r.setAttribute('width',(bw-8).toFixed(1));r.setAttribute('y',(199-h).toFixed(1));r.setAttribute('height',h.toFixed(1));r.setAttribute('rx','3');r.setAttribute('fill',x.fraud?'#ef4444':'#3b82f6');const tt=document.createElementNS(svgNS,'title');tt.textContent=x.id+': '+(x.p*100).toFixed(1)+'% fraud risk';r.appendChild(tt);g.appendChild(r)});
+    $('barsEmpty').hidden=n>0;
+    // donut
+    const C=377,fa=n?nf/n*C:0;$('dArcL').style.strokeDasharray=(n?C-fa:0)+' '+C;$('dArcL').style.strokeDashoffset=-fa;$('dArcF').style.strokeDasharray=fa+' '+C;$('dArcF').style.strokeDashoffset=0;
+    $('dPct').textContent=n?pct(nf/n):'–';$('dLgF').textContent=nf;$('dLgL').textContent=nl;
+    // types
+    const by={};FS.TYPES.forEach(k=>by[k]={f:0,l:0});S.forEach(x=>by[x.t.type][x.fraud?'f':'l']++);const mx=Math.max(1,...FS.TYPES.map(k=>by[k].f+by[k].l));
+    $('typeBars').innerHTML=FS.TYPES.map(k=>{const b=by[k],tot=b.f+b.l;return '<div class="type-row"><span>'+TL[k]+'</span><div class="type-track"><i class="t-f" style="width:'+b.f/mx*100+'%"></i><i class="t-l" style="width:'+b.l/mx*100+'%"></i></div><b>'+tot+'</b></div>'}).join('');
+    // feed
+    const feed=$('txFeed');feed.innerHTML='';if(!n)feed.innerHTML='<div class="feed-empty">No transactions analyzed yet. Use the form above or load test-set samples.</div>';
+    S.slice(-8).reverse().forEach(x=>{const e=document.createElement('div');e.className='feed-item';const cls=x.fraud?['blocked','danger','FRAUD']:['approved','safe','LEGITIMATE'];
+      const tm=new Date(x.ts),hh=[tm.getHours(),tm.getMinutes()].map(v=>String(v).padStart(2,'0')).join(':');
+      e.innerHTML='<span class="feed-status '+cls[1]+'"></span><span class="feed-id">'+x.id+'</span><span class="feed-type">'+TL[x.t.type]+'</span><span class="feed-amount">'+inr(x.t.amount)+'</span><span class="feed-result '+cls[0]+'">'+cls[2]+' · '+(x.p*100).toFixed(1)+'%</span><span class="feed-time">'+(x.src==='you'?'you':'sample · actual '+(x.actual?'fraud':'legit'))+' · '+hh+'</span>';feed.appendChild(e)});
+  }
+  $('perfGrid').innerHTML=[['Accuracy',pct(M.accuracy)],['Precision',pct(M.precision)],['Recall',pct(M.recall)],['AUC',M.auc.toFixed(3)]].map(a=>'<div><b>'+a[1]+'</b><span>'+a[0]+'</span></div>').join('');
+  $('cm').innerHTML='<div class="ok"><b>'+M.tp+'</b>Fraud caught (true positive)</div><div class="bad"><b>'+M.fp+'</b>Legit flagged (false positive)</div><div class="bad"><b>'+M.fn+'</b>Fraud missed (false negative)</div><div class="ok"><b>'+M.tn+'</b>Legit approved (true negative)</div>';
+  $('perfCap').textContent='Evaluated on '+M.n.toLocaleString('en-IN')+' transactions the model never saw in training. Measured when this page loaded.';
+  const fraudT=FS.test.filter(t=>t.fraud),legitT=FS.test.filter(t=>!t.fraud);
+  $('loadSamples').addEventListener('click',()=>{for(let i=0;i<5;i++){const t=fraudT[sp.f++%fraudT.length];add(t,FS.predict(t),'sample',true)}for(let i=0;i<20;i++){const t=legitT[sp.l++%legitT.length];add(t,FS.predict(t),'sample',false)}save();render()});
+  $('clearDash').addEventListener('click',()=>{S=[];counter=0;sp={f:0,l:0};save();render();toast('Dashboard cleared')});
+  render();
+
+  /* ---- navigation, buttons, modal ---- */
+  function toast(msg){let el=document.querySelector('.toast');if(!el){el=document.createElement('div');el.className='toast';el.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0a0f1e;border:1px solid var(--border-hover);color:#f1f5f9;padding:12px 20px;border-radius:999px;z-index:20001;font-size:.9rem;box-shadow:var(--shadow-md)';document.body.appendChild(el)}el.textContent=msg;el.style.display='block';clearTimeout(el._t);el._t=setTimeout(()=>el.style.display='none',2200)}
+  const closeMenu=()=>{document.body.classList.remove('menu-open');const h=$('hamburger');h.classList.remove('active');h.setAttribute('aria-expanded','false')};
+  function go(sel,focus){closeMenu();const el=sel==='#'||sel==='#top'?document.body:document.querySelector(sel);if(!el)return;
+    if(el===document.body)window.scrollTo({top:0,behavior:'smooth'});else el.scrollIntoView({behavior:'smooth',block:'start'});
+    if(focus){setTimeout(()=>{F.amt.focus({preventScroll:true});$('demo').querySelectorAll('.an-form').forEach(f=>{f.classList.remove('flash');void f.offsetWidth;f.classList.add('flash')})},750)}}
+  const hb=$('hamburger');hb.setAttribute('role','button');hb.setAttribute('tabindex','0');hb.setAttribute('aria-label','Toggle menu');hb.setAttribute('aria-expanded','false');
+  const toggle=()=>{const o=document.body.classList.toggle('menu-open');hb.classList.toggle('active',o);hb.setAttribute('aria-expanded',o)};
+  hb.addEventListener('click',toggle);hb.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle()}});
+  addEventListener('resize',()=>{if(innerWidth>980)closeMenu()});
+  const MODAL={
+    'Pricing':['Pricing','FraudShield AI is a free demo. There are no plans, prices or sign-ups: the model runs entirely in your browser.'],
+    'API Docs':['API','This demo has no server and no public API. The model is a small JavaScript logistic regression running on your device.'],
+    'Changelog':['Changelog','v2 — Transaction schema with sender and receiver balances, live dashboard computed from your analyses, measured model metrics, working navigation and mobile menu.'],
+    'About Us':['About FraudShield AI','FraudShield AI demonstrates machine-learning fraud detection for online financial transactions, using a model trained in your browser on synthetic PaySim-style data.'],
+    'Privacy Policy':['Privacy','Everything runs locally in your browser. Transactions you analyze are not sent anywhere; they are only kept in this browser (localStorage) so the dashboard can show them. Use "Clear dashboard" to remove them.'],
+    'Terms of Service':['Terms','This is a demonstration. Verdicts come from a model trained on synthetic data and must not be used to make real financial or security decisions.'],
+    'Cookie Policy':['Cookies','This site sets no cookies. It uses localStorage only to remember the transactions you analyzed. Fonts are loaded from Google Fonts.'],
+    'Security':['Security','No data leaves your device, there is no login and there is no backend. Report fraud you experience in India on 1930 or at cybercrime.gov.in.'],
+    'Compliance':['Compliance','This demo holds no certifications and processes no real customer data.'],
+    '𝕏':['Social','FraudShield AI has no social profiles linked in this demo.'],'in':['Social','FraudShield AI has no social profiles linked in this demo.'],'⌥':['Social','FraudShield AI has no social profiles linked in this demo.'],'▶':['Social','FraudShield AI has no social profiles linked in this demo.']};
+  const LINKS={'Features':'#features','Integrations':'#platforms','Documentation':'#how-it-works','Case Studies':'#dashboard','Support':'#demo'};
+  const modal=document.createElement('div');modal.className='modal';modal.hidden=true;modal.innerHTML='<div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="mTitle"><button class="modal-x" type="button" aria-label="Close">×</button><h3 id="mTitle"></h3><p id="mBody"></p><button class="btn btn-primary" type="button"><span>Got it</span></button></div>';document.body.appendChild(modal);
+  const openModal=(t,b)=>{modal.querySelector('#mTitle').textContent=t;modal.querySelector('#mBody').textContent=b;modal.hidden=false;modal.querySelector('.btn').focus()};
+  const closeModal=()=>{modal.hidden=true};
+  modal.addEventListener('click',e=>{if(e.target===modal||e.target.closest('.modal-x')||e.target.closest('.btn'))closeModal()});
+  addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeMenu()}});
+  document.addEventListener('click',e=>{
+    const d=e.target.closest('[data-go]');if(d){e.preventDefault();go(d.dataset.go,d.dataset.focus);if(d.dataset.sample){setTimeout(()=>{fill(PRE[d.dataset.sample]);run()},900)}return}
+    const a=e.target.closest('a[href^="#"]');if(!a)return;e.preventDefault();const h=a.getAttribute('href'),txt=a.textContent.trim();
+    if(h.length>1){go(h);return}
+    if(a.classList.contains('logo')){go('#top');return}
+    if(LINKS[txt]){go(LINKS[txt]);return}
+    const m=MODAL[txt];openModal(m?m[0]:txt,m?m[1]:'This page is not part of this demo site yet.')});
+  addEventListener('load',()=>{if(location.hash.length>1)setTimeout(()=>go(location.hash),400)});
+})();
+
+</script>
+</body>
+</html>

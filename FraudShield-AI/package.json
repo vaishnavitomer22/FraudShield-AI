@@ -1,0 +1,20 @@
+{
+  "name": "fraudshield-ai",
+  "version": "1.0.0",
+  "description": "AI-powered online transaction fraud detection (logistic regression in JavaScript) with an interactive dashboard.",
+  "license": "MIT",
+  "private": true,
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "dataset": "node data/generate_dataset.js",
+    "train": "node model/train_model.js",
+    "evaluate": "node model/evaluate_model.js",
+    "predict": "node model/load_model.js",
+    "test": "node tests/model.test.js",
+    "test:e2e": "node tests/e2e.test.js",
+    "figures": "python docs/generate_figures.py"
+  },
+  "devDependencies": {
+    "playwright": "^1.40.0"
+  }
+}

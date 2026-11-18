@@ -1,0 +1,4 @@
+# The website and the model run on plain JavaScript (Node.js >= 18) and need NO Python.
+# Python is used for one optional task only: drawing the diagrams and evaluation figures
+# (docs/generate_figures.py).
+matplotlib>=3.7
